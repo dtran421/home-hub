@@ -1,25 +1,25 @@
 import { useState, useEffect, type FormEvent, type ReactNode } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
-import Link from "next/link";
 import { FiEdit2, FiRefreshCw } from "react-icons/fi";
 
 import { api } from "@/utils/api";
-import { useName, useUpdateName } from "@/hooks/Settings";
+import { useGetUser, useUpsertUser } from "@/hooks/Settings";
 import { ErrorAlert } from "@/components/Alerts/ErrorAlert";
 import { NavMenu } from "@/components/NavMenu";
-import { useUnsplashImage } from "@/hooks/Unsplash";
+import { useGetUnsplashImage } from "@/hooks/Unsplash";
 
 const Home = () => {
-  /* const { name, isLoading, isError, error } = useName();
-  const updateName = useUpdateName();
+  const { user, isLoading, isError, error } = useGetUser();
+  const upsertUser = useUpsertUser(user);
 
-  const [showEditor, toggleShowEditor] = useState(!name);
+  const [showEditor, toggleShowEditor] = useState(!user?.name);
   useEffect(() => {
-    toggleShowEditor(!name);
-  }, [name]); */
+    toggleShowEditor(!user?.name);
+  }, [user?.name]);
 
-  // const [newName, setNewName] = useState(name ?? "");
+  const [name, setName] = useState(user?.name ?? "");
+
   const [time, setTime] = useState(new Date());
   useEffect(() => {
     const interval = setInterval(() => setTime(new Date()), 1000);
@@ -33,73 +33,82 @@ const Home = () => {
     }
   }, [refreshBg]);
 
-  /* const submitHandler = (e: FormEvent) => {
+  const submitHandler = (e: FormEvent) => {
     e.preventDefault();
-    // updateName.mutate(newName);
+    upsertUser.mutate({
+      name,
+    });
   };
 
-  const loading = isLoading || updateName.isLoading;
+  const loading = isLoading || upsertUser.isLoading;
   let headerText;
   if (!showEditor) {
-    headerText = `Welcome home, ${name ?? "stranger"}`;
+    headerText = `Welcome home, ${user?.name ?? "stranger"}`;
   } else if (!loading) {
     headerText = "Hello, what may I call you?";
-  } */
+  }
 
   return (
-    <BackgroundContainer refreshBg={refreshBg}>
-      {/* <div className="indicator">
-        {!!name && (
-          <button
-            className="indicator-item badge badge-secondary"
-            onClick={() => toggleShowEditor(!showEditor)}
-          >
-            <FiEdit2 />
-          </button>
-        )}
-        <div className="bg-neutral/30 flex flex-col items-center space-y-8 rounded-md px-8 py-6 backdrop-blur-sm">
-          {loading ? (
-            <span className="loading loading-bars loading-md text-accent" />
-          ) : (
-            <h1 className="text-center font-mono text-2xl font-bold text-gray-100">
-              {headerText}
-            </h1>
+    <>
+      <Head>
+        <title>Home Hub</title>
+        <meta name="description" content="Modern digital hub for the home" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <BackgroundContainer refreshBg={refreshBg}>
+        <div className="indicator">
+          {!!user?.name && (
+            <button
+              className="indicator-item badge badge-secondary"
+              onClick={() => toggleShowEditor(!showEditor)}
+            >
+              <FiEdit2 />
+            </button>
           )}
-          {!loading && showEditor && (
-            <form onSubmit={submitHandler}>
-              <input
-                type="text"
-                placeholder="Tony Stark"
-                className="input input-bordered input-primary w-full max-w-xs text-center"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-              />
-              {updateName.isLoading && (
-                <span className="loading loading-spinner loading-md text-accent" />
-              )}
-            </form>
-          )}
-          {!loading && name ? (
-            <h2 className="text-center font-mono text-6xl font-bold text-white">
-              {time.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </h2>
-          ) : null}
+          <div className="bg-neutral/30 flex flex-col items-center space-y-8 rounded-md px-8 py-6 backdrop-blur-sm">
+            {loading ? (
+              <span className="loading loading-bars loading-md text-accent" />
+            ) : (
+              <h1 className="text-center font-mono text-2xl font-bold text-gray-100">
+                {headerText}
+              </h1>
+            )}
+            {!loading && showEditor && (
+              <form onSubmit={submitHandler}>
+                <input
+                  type="text"
+                  placeholder="Tony Stark"
+                  className="input input-bordered input-primary w-full max-w-xs text-center"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                {upsertUser.isLoading && (
+                  <span className="loading loading-spinner loading-md text-accent" />
+                )}
+              </form>
+            )}
+            {!loading && user?.name ? (
+              <h2 className="text-center font-mono text-6xl font-bold text-white">
+                {time.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </h2>
+            ) : null}
+          </div>
         </div>
-      </div> */}
-      <div className="absolute bottom-4 right-4">
-        <button
-          className="btn btn-circle text-accent"
-          onClick={() => toggleRefreshBg(true)}
-        >
-          <FiRefreshCw size={20} />
-        </button>
-      </div>
-      {/* <NavMenu /> */}
-      {/* {isError && <ErrorAlert message={error} />} */}
-    </BackgroundContainer>
+        <div className="absolute bottom-4 right-4">
+          <button
+            className="btn btn-circle text-accent"
+            onClick={() => toggleRefreshBg(true)}
+          >
+            <FiRefreshCw size={20} />
+          </button>
+        </div>
+        <NavMenu />
+        {isError && <ErrorAlert message={error?.message} />}
+      </BackgroundContainer>
+    </>
   );
 };
 
@@ -109,78 +118,27 @@ interface BackgroundContainerProps {
 }
 
 const BackgroundContainer = (props: BackgroundContainerProps) => {
-  const { img, isLoading, refresh } = useUnsplashImage();
+  const { img, isLoading, refresh } = useGetUnsplashImage();
 
   if (props.refreshBg) {
     refresh();
   }
 
   return isLoading ? (
-    <div className="bg-base-100 flex h-screen w-full flex-col items-center justify-center p-4">
+    <main className="bg-base-100 flex h-screen w-full flex-col items-center justify-center p-4">
       {props.children}
-    </div>
+    </main>
   ) : (
-    <div
+    <main
       className="flex h-screen w-full flex-col items-center justify-center bg-cover bg-center p-4"
       style={{
         backgroundImage: `url(${img?.urls.full})`,
       }}
     >
       {props.children}
-    </div>
+    </main>
   );
 };
-
-/* const Home = () => {
-  const hello = api.example.hello.useQuery({ text: "from tRPC" });
-
-  return (
-    <>
-      <Head>
-        <title>Create T3 App</title>
-        <meta name="description" content="Generated by create-t3-app" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <main className=" flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
-          <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-            Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-          </h1>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              href="https://create.t3.gg/en/usage/first-steps"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">First Steps →</h3>
-              <div className="text-lg">
-                Just the basics - Everything you need to know to set up your
-                database and authentication.
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              href="https://create.t3.gg/en/introduction"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Documentation →</h3>
-              <div className="text-lg">
-                Learn more about Create T3 App, the libraries it uses, and how
-                to deploy it.
-              </div>
-            </Link>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-2xl text-white">
-              {hello.data ? hello.data.greeting : "Loading tRPC query..."}
-            </p>
-            <AuthShowcase />
-          </div>
-        </div>
-      </main>
-    </>
-  );
-}; */
 
 function AuthShowcase() {
   const { data: sessionData } = useSession();

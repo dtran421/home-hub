@@ -1,37 +1,44 @@
+import { type User } from "@/server/db/schema";
+import { api } from "@/utils/api";
+import { generateQueryKey } from "@/utils/query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-const getName = async () => {
-  // return await GetName();
-};
-
-export const useName = () => {
+export const useGetUser = () => {
   const {
-    data: name,
+    data: user,
     isLoading,
     isError,
     error,
-  } = useQuery(["name"], getName, {
-    retry: false,
-  });
+  } = api.users.get.useQuery(
+    {
+      id: "1",
+    },
+    {
+      retry: false,
+    },
+  );
 
   return {
-    name,
+    user,
     isLoading,
     isError,
-    error: error as string,
+    error,
   };
 };
 
-export const useUpdateName = () => {
+export const useCreateUser = () => {
   const queryClient = useQueryClient();
-  // const setName = SetName;
 
-  const { mutate, isLoading, isSuccess, isError, error } = useMutation({
-    // mutationFn: setName,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["name"] });
-    },
-  });
+  const { mutate, isLoading, isSuccess, isError, error } =
+    api.users.insert.useMutation({
+      onSuccess: () => {
+        void queryClient.invalidateQueries(
+          generateQueryKey(api.users.get, {
+            id: "1",
+          }),
+        );
+      },
+    });
 
   return {
     mutate,
@@ -40,6 +47,40 @@ export const useUpdateName = () => {
     isError,
     error,
   };
+};
+
+export const useUpdateUser = () => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isLoading, isSuccess, isError, error } =
+    api.users.update.useMutation({
+      onSuccess: () => {
+        void queryClient.invalidateQueries(
+          generateQueryKey(api.users.get, {
+            id: "1",
+          }),
+        );
+      },
+    });
+
+  return {
+    mutate,
+    isLoading,
+    isSuccess,
+    isError,
+    error,
+  };
+};
+
+export const useUpsertUser = (user?: User | null) => {
+  const createUser = useCreateUser();
+  const updateUser = useUpdateUser();
+
+  if (user === null) {
+    return createUser;
+  }
+
+  return updateUser;
 };
 
 const getCity = async () => {

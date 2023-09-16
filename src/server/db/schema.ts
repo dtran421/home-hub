@@ -1,57 +1,37 @@
 import { relations, sql } from "drizzle-orm";
 import {
-  bigint,
   index,
   int,
-  mysqlTableCreator,
+  mysqlTable,
   primaryKey,
   text,
   timestamp,
-  uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
-/**
- * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
- * database instance for multiple projects.
- *
- * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
- */
-export const mysqlTable = mysqlTableCreator((name) => `home-hub-v2_${name}`);
-
-export const example = mysqlTable(
-  "example",
-  {
-    id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
-    name: varchar("name", { length: 256 }),
-    createdAt: timestamp("created_at")
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updatedAt").onUpdateNow(),
-  },
-  (example) => ({
-    nameIndex: uniqueIndex("name_idx").on(example.name),
-  })
-);
-
-export const users = mysqlTable("user", {
-  id: varchar("id", { length: 255 }).notNull().primaryKey(),
+export const users = mysqlTable("users", {
+  id: varchar("id", { length: 191 })
+    .primaryKey()
+    .notNull()
+    .$defaultFn(() => crypto.randomUUID()),
   name: varchar("name", { length: 255 }),
   email: varchar("email", { length: 255 }).notNull(),
   emailVerified: timestamp("emailVerified", {
     mode: "date",
     fsp: 3,
   }).default(sql`CURRENT_TIMESTAMP(3)`),
-  image: varchar("image", { length: 255 }),
 });
+
+export type User = typeof users.$inferSelect; // return type when queried
+export type NewUser = typeof users.$inferInsert; // insert type
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
 }));
 
 export const accounts = mysqlTable(
-  "account",
+  "accounts",
   {
     userId: varchar("userId", { length: 255 }).notNull(),
     type: varchar("type", { length: 255 })
@@ -70,7 +50,7 @@ export const accounts = mysqlTable(
   (account) => ({
     compoundKey: primaryKey(account.provider, account.providerAccountId),
     userIdIdx: index("userId_idx").on(account.userId),
-  })
+  }),
 );
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -78,7 +58,7 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 }));
 
 export const sessions = mysqlTable(
-  "session",
+  "sessions",
   {
     sessionToken: varchar("sessionToken", { length: 255 })
       .notNull()
@@ -88,7 +68,7 @@ export const sessions = mysqlTable(
   },
   (session) => ({
     userIdIdx: index("userId_idx").on(session.userId),
-  })
+  }),
 );
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -96,7 +76,7 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
 }));
 
 export const verificationTokens = mysqlTable(
-  "verificationToken",
+  "verificationTokens",
   {
     identifier: varchar("identifier", { length: 255 }).notNull(),
     token: varchar("token", { length: 255 }).notNull(),
@@ -104,5 +84,5 @@ export const verificationTokens = mysqlTable(
   },
   (vt) => ({
     compoundKey: primaryKey(vt.identifier, vt.token),
-  })
+  }),
 );

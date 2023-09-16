@@ -5,12 +5,16 @@ export const env = createEnv({
   /**
    * Specify your server-side environment variables schema here. This way you can ensure the app
    * isn't built with invalid env vars.
+   *
+   * Add `.min(1) on ID and SECRET if you want to make sure they're not empty
    */
   server: {
-    DATABASE_URL: z.string().url(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+
+    DATABASE_URL: z.string().url().min(1),
+
     NEXTAUTH_SECRET:
       process.env.NODE_ENV === "production"
         ? z.string().min(1)
@@ -22,7 +26,7 @@ export const env = createEnv({
       // VERCEL_URL doesn't include `https` so it cant be validated as a URL
       process.env.VERCEL ? z.string().min(1) : z.string().url(),
     ),
-    // Add `.min(1) on ID and SECRET if you want to make sure they're not empty
+
     UNSPLASH_ACCESS_KEY: z.string().min(1),
     UNSPLASH_SECRET_KEY: z.string().min(1),
   },
@@ -41,10 +45,13 @@ export const env = createEnv({
    * middlewares) or client-side so we need to destruct manually.
    */
   runtimeEnv: {
-    DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
+
+    DATABASE_URL: process.env.DATABASE_URL,
+
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+
     UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY,
     UNSPLASH_SECRET_KEY: process.env.UNSPLASH_SECRET_KEY,
   },

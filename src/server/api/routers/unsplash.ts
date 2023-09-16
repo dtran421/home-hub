@@ -23,19 +23,19 @@ export const unsplashRouter = createTRPCRouter({
       const queryString = new URLSearchParams();
 
       if (topics) {
-        queryString.append("topics", topics);
+        queryString.set("topics", topics);
       }
 
       if (orientation) {
-        queryString.append("orientation", orientation);
+        queryString.set("orientation", orientation);
       }
 
       if (collections) {
-        queryString.append("collections", collections);
+        queryString.set("collections", collections);
       }
 
       if (query) {
-        queryString.append("query", query);
+        queryString.set("query", query);
       }
 
       const { data } = await axios.get<UnsplashRandomImageJSON>(
