@@ -17,6 +17,17 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdn.weatherapi.com",
+        port: "",
+        pathname: "/weather/64x64/day/**",
+      },
+    ],
+  },
 };
 
 export default config;

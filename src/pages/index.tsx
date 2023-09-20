@@ -3,15 +3,15 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import { FiEdit2, FiRefreshCw } from "react-icons/fi";
 
-import { api } from "@/utils/api";
-import { useGetUser, useUpsertUser } from "@/hooks/Settings";
+import { useCreateUser, useGetUser, useUpdateUser } from "@/hooks/User";
 import { ErrorAlert } from "@/components/Alerts/ErrorAlert";
 import { NavMenu } from "@/components/NavMenu";
 import { useGetUnsplashImage } from "@/hooks/Unsplash";
 
 const Home = () => {
   const { user, isLoading, isError, error } = useGetUser();
-  const upsertUser = useUpsertUser(user);
+  const createUser = useCreateUser();
+  const updateUser = useUpdateUser();
 
   const [showEditor, toggleShowEditor] = useState(!user?.name);
   useEffect(() => {
@@ -35,12 +35,18 @@ const Home = () => {
 
   const submitHandler = (e: FormEvent) => {
     e.preventDefault();
-    upsertUser.mutate({
+
+    if (user === null) {
+      return createUser.mutate({ name });
+    }
+
+    updateUser.mutate({
+      id: "1",
       name,
     });
   };
 
-  const loading = isLoading || upsertUser.isLoading;
+  const loading = isLoading || createUser.isLoading || updateUser.isLoading;
   let headerText;
   if (!showEditor) {
     headerText = `Welcome home, ${user?.name ?? "stranger"}`;
@@ -59,13 +65,13 @@ const Home = () => {
         <div className="indicator">
           {!!user?.name && (
             <button
-              className="indicator-item badge badge-secondary"
+              className="badge indicator-item badge-secondary"
               onClick={() => toggleShowEditor(!showEditor)}
             >
               <FiEdit2 />
             </button>
           )}
-          <div className="bg-neutral/30 flex flex-col items-center space-y-8 rounded-md px-8 py-6 backdrop-blur-sm">
+          <div className="flex flex-col items-center space-y-8 rounded-md bg-neutral/30 px-8 py-6 backdrop-blur-sm">
             {loading ? (
               <span className="loading loading-bars loading-md text-accent" />
             ) : (
@@ -82,7 +88,7 @@ const Home = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
-                {upsertUser.isLoading && (
+                {(createUser.isLoading || updateUser.isLoading) && (
                   <span className="loading loading-spinner loading-md text-accent" />
                 )}
               </form>
@@ -125,7 +131,7 @@ const BackgroundContainer = (props: BackgroundContainerProps) => {
   }
 
   return isLoading ? (
-    <main className="bg-base-100 flex h-screen w-full flex-col items-center justify-center p-4">
+    <main className="flex h-screen w-full flex-col items-center justify-center bg-base-100 p-4">
       {props.children}
     </main>
   ) : (
@@ -140,7 +146,7 @@ const BackgroundContainer = (props: BackgroundContainerProps) => {
   );
 };
 
-function AuthShowcase() {
+/* function AuthShowcase() {
   const { data: sessionData } = useSession();
 
   const { data: secretMessage } = api.example.getSecretMessage.useQuery(
@@ -162,6 +168,6 @@ function AuthShowcase() {
       </button>
     </div>
   );
-}
+} */
 
 export default Home;

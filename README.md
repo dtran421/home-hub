@@ -30,17 +30,9 @@ chromium-browser --start-fullscreen --app=http://localhost:3000
 > Note: the `--app` flag is useful for hiding the 'Restore tabs' popup that appears when Chromium crashes (or is killed),
 > allowing you to use Ctrl + C to kill the process without having to worry about the popup.
 
-## What's next? How do I make an app with this?
+## TODO
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
-
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
-
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+- [ ] [Set up kiosk mode](https://www.raspberrypi.com/tutorials/how-to-use-a-raspberry-pi-in-kiosk-mode/)
 
 ## Learn More
 

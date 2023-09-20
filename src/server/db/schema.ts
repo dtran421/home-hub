@@ -21,6 +21,7 @@ export const users = mysqlTable("users", {
     mode: "date",
     fsp: 3,
   }).default(sql`CURRENT_TIMESTAMP(3)`),
+  city: varchar("city", { length: 255 }),
 });
 
 export type User = typeof users.$inferSelect; // return type when queried

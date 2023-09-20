@@ -5,6 +5,7 @@
   "scripts": {
     "build": "next build",
     "db:push": "dotenv drizzle-kit push:mysql",
+    "db:generate": "dotenv drizzle-kit generate:mysql",
     "preview": "chromium-browser --start-fullscreen --app=http://localhost:3000",
     "dev": "next dev",
     "dev:rpi": "yarn dev & yarn run preview",

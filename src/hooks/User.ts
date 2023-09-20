@@ -1,7 +1,6 @@
-import { type User } from "@/server/db/schema";
 import { api } from "@/utils/api";
 import { generateQueryKey } from "@/utils/query";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useGetUser = () => {
   const {
@@ -67,61 +66,6 @@ export const useUpdateUser = () => {
     mutate,
     isLoading,
     isSuccess,
-    isError,
-    error,
-  };
-};
-
-export const useUpsertUser = (user?: User | null) => {
-  const createUser = useCreateUser();
-  const updateUser = useUpdateUser();
-
-  if (user === null) {
-    return createUser;
-  }
-
-  return updateUser;
-};
-
-const getCity = async () => {
-  // return await GetCity();
-};
-
-export const useCity = () => {
-  const {
-    data: city,
-    isLoading,
-    isSuccess,
-    isError,
-    error,
-  } = useQuery(["city"], getCity, {
-    retry: false,
-  });
-
-  return {
-    city,
-    isLoading,
-    isSuccess,
-    isError,
-    error: error as string,
-  };
-};
-
-export const useUpdateCity = () => {
-  const queryClient = useQueryClient();
-  // const setCity = SetCity;
-
-  const { mutate, isLoading, isError, error } = useMutation({
-    // mutationFn: setCity,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["city"] });
-      void queryClient.invalidateQueries({ queryKey: ["5-day-forecast"] });
-    },
-  });
-
-  return {
-    mutate,
-    isLoading,
     isError,
     error,
   };

@@ -29,6 +29,8 @@ export const env = createEnv({
 
     UNSPLASH_ACCESS_KEY: z.string().min(1),
     UNSPLASH_SECRET_KEY: z.string().min(1),
+
+    WEATHER_ACCESS_KEY: z.string().min(1),
   },
 
   /**
@@ -54,6 +56,8 @@ export const env = createEnv({
 
     UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY,
     UNSPLASH_SECRET_KEY: process.env.UNSPLASH_SECRET_KEY,
+
+    WEATHER_ACCESS_KEY: process.env.WEATHER_ACCESS_KEY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
