@@ -1,6 +1,7 @@
+import { useQueryClient } from "@tanstack/react-query";
+
 import { api } from "@/utils/api";
 import { generateQueryKey } from "@/utils/query";
-import { useQueryClient } from "@tanstack/react-query";
 
 export const useGetUser = () => {
   const {

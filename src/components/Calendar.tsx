@@ -1,20 +1,22 @@
-import { useState, useCallback, Fragment, Dispatch, SetStateAction, useReducer } from "react";
-// * make sure to import the calendar css before components
-import "@mobiscroll/react/dist/css/mobiscroll.min.css";
+import { type Dispatch, Fragment, type SetStateAction, useCallback, useReducer,useState } from "react";
+
 import {
-  MbscEventClickEvent,
-  Page,
-  Eventcalendar,
-  Toast,
   CalendarNav,
   CalendarNext,
   CalendarPrev,
+  CalendarToday,
+  Eventcalendar,
+  type MbscCalendarEvent,
+  type MbscEventcalendarView,
+  type MbscEventClickEvent,
+  Page,
   SegmentedGroup,
   SegmentedItem,
-  MbscEventcalendarView,
-  MbscCalendarEvent,
-  CalendarToday,
+  Toast,
 } from "@mobiscroll/react";
+
+// * make sure to import the calendar css before components
+import "@mobiscroll/react/dist/css/mobiscroll.min.css";
 
 const getCalendarView = (view: string): MbscEventcalendarView => {
   switch (view) {

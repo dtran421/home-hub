@@ -1,11 +1,13 @@
+import { type inferReactQueryProcedureOptions } from "@trpc/react-query";
 import { type RouterLike, type UtilsLike } from "@trpc/react-query/shared";
-import { createTRPCRouter } from "@/server/api/trpc";
+import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
+
 import { exampleRouter } from "@/server/api/routers/example";
 import { unsplashRouter } from "@/server/api/routers/unsplash";
+import { createTRPCRouter } from "@/server/api/trpc";
+
 import { usersRouter } from "./routers/users";
 import { weatherRouter } from "./routers/weather";
-import { type inferReactQueryProcedureOptions } from "@trpc/react-query";
-import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 
 /**
  * This is the primary router for your server.

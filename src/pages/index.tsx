@@ -1,13 +1,13 @@
-import { useState, useEffect, type FormEvent, type ReactNode } from "react";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { type FormEvent, type ReactNode,useEffect, useState } from "react";
 import Head from "next/head";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { FiEdit2, FiRefreshCw } from "react-icons/fi";
+import { cn } from "utils-toolkit";
 
-import { useCreateUser, useGetUser, useUpdateUser } from "@/hooks/User";
 import { ErrorAlert } from "@/components/Alerts/ErrorAlert";
 import { NavMenu } from "@/components/NavMenu";
 import { useGetUnsplashImage } from "@/hooks/Unsplash";
-import { cn } from "utils-toolkit";
+import { useCreateUser, useGetUser, useUpdateUser } from "@/hooks/User";
 
 const Home = () => {
   const { user, isLoading, isError, error } = useGetUser();

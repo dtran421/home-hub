@@ -46,6 +46,7 @@
     "drizzle-kit": "^0.19.13",
     "eslint": "^8.47.0",
     "eslint-config-next": "^13.4.19",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
     "postcss": "^8.4.27",
     "prettier": "^3.0.0",
     "prettier-plugin-tailwindcss": "^0.5.1",

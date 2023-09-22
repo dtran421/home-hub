@@ -5,26 +5,26 @@ interface WarningAlertProps {
   onClose: () => void;
 }
 
-export const WarningAlert = (props: WarningAlertProps) => {
-  console.warn(props.message);
+export const WarningAlert = ({ message, onClose }: WarningAlertProps) => {
+  console.warn(message);
 
-  const [show, setShow] = useState(!!props.message);
+  const [show, setShow] = useState(!!message);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
       setShow(false);
-      props.onClose();
+      onClose();
     }, 5000);
 
     return () => clearTimeout(timeout);
-  }, []);
+  }, [onClose]);
 
   return show ? (
-    <div className="absolute left-2 bottom-2">
+    <div className="absolute bottom-2 left-2">
       <div className="alert alert-warning">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="stroke-current shrink-0 h-6 w-6"
+          className="h-6 w-6 shrink-0 stroke-current"
           fill="none"
           viewBox="0 0 24 24"
         >
@@ -35,7 +35,7 @@ export const WarningAlert = (props: WarningAlertProps) => {
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
           />
         </svg>
-        <span>{props.message}</span>
+        <span>{message}</span>
       </div>
     </div>
   ) : null;

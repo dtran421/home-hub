@@ -1,10 +1,12 @@
+import { useCallback } from "react";
+import { consumeApiResponse, Option } from "utils-toolkit";
+
+import { useQueryClient } from "@tanstack/react-query";
+import { TRPCClientError, type TRPCClientErrorLike } from "@trpc/client";
+
 import { type AppRouter, type TRPCRouterLike } from "@/server/api/root";
 import { api } from "@/utils/api";
 import { generateQueryKey } from "@/utils/query";
-import { useQueryClient } from "@tanstack/react-query";
-import { TRPCClientError, type TRPCClientErrorLike } from "@trpc/client";
-import { useCallback } from "react";
-import { consumeApiResponse, Option } from "utils-toolkit";
 
 const DEFAULT_PARAMS = {
   topics: "nature",

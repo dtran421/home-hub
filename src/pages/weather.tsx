@@ -1,10 +1,5 @@
-import { WarningAlert } from "@/components/Alerts/WarningAlert";
-import { NavMenu } from "@/components/NavMenu";
-import { useGetUser, useUpdateUser } from "@/hooks/User";
-import { use3DayForecast } from "@/hooks/Weather";
-import { type ForecastDay, type WeatherForecastJSON } from "@/types/Weather";
+import { type FormEvent, useEffect,useState } from "react";
 import Image from "next/image";
-import { type FormEvent, useState, useEffect } from "react";
 import {
   FiArrowUp,
   FiMinus,
@@ -13,6 +8,12 @@ import {
   FiTrendingDown,
   FiTrendingUp,
 } from "react-icons/fi";
+
+import { WarningAlert } from "@/components/Alerts/WarningAlert";
+import { NavMenu } from "@/components/NavMenu";
+import { useGetUser, useUpdateUser } from "@/hooks/User";
+import { use3DayForecast } from "@/hooks/Weather";
+import { type ForecastDay, type WeatherForecastJSON } from "@/types/Weather";
 
 const Weather = () => {
   const { user, isLoading: isLoadingUser } = useGetUser();

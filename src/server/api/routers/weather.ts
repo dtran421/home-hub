@@ -1,5 +1,5 @@
-import { z } from "zod";
 import axios from "axios";
+import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { type WeatherForecastJSON } from "@/types/Weather";

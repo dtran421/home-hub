@@ -1,9 +1,9 @@
 import { HashRouter, Route, Routes } from "react-router-dom";
 
-import Index from "@pages/index";
-import Error from "@pages/error";
-import Weather from "@pages/weather";
 import Calendar from "@pages/calendar";
+import Error from "@pages/error";
+import Index from "@pages/index";
+import Weather from "@pages/weather";
 
 const Router = () => {
   return (
