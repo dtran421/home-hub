@@ -31,6 +31,7 @@
     "react-dom": "18.2.0",
     "react-icons": "^4.11.0",
     "superjson": "^1.13.1",
+    "utils-toolkit": "^0.2.0",
     "zod": "^3.21.4"
   },
   "devDependencies": {

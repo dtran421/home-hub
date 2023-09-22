@@ -7,6 +7,7 @@ import { useCreateUser, useGetUser, useUpdateUser } from "@/hooks/User";
 import { ErrorAlert } from "@/components/Alerts/ErrorAlert";
 import { NavMenu } from "@/components/NavMenu";
 import { useGetUnsplashImage } from "@/hooks/Unsplash";
+import { cn } from "utils-toolkit";
 
 const Home = () => {
   const { user, isLoading, isError, error } = useGetUser();
@@ -124,24 +125,26 @@ interface BackgroundContainerProps {
 }
 
 const BackgroundContainer = (props: BackgroundContainerProps) => {
-  const { img, isLoading, refresh } = useGetUnsplashImage();
+  const { img, isError, error, refresh } = useGetUnsplashImage();
 
   if (props.refreshBg) {
     refresh();
   }
 
-  return isLoading ? (
-    <main className="flex h-screen w-full flex-col items-center justify-center bg-base-100 p-4">
-      {props.children}
-    </main>
-  ) : (
+  return (
     <main
-      className="flex h-screen w-full flex-col items-center justify-center bg-cover bg-center p-4"
+      className={cn(
+        "flex h-screen w-full flex-col items-center justify-center bg-base-100 p-4",
+        {
+          "bg-cover bg-center": !!img,
+        },
+      )}
       style={{
         backgroundImage: `url(${img?.urls.full})`,
       }}
     >
       {props.children}
+      {isError && <ErrorAlert message={error?.message} />}
     </main>
   );
 };
@@ -150,7 +153,6 @@ const BackgroundContainer = (props: BackgroundContainerProps) => {
   const { data: sessionData } = useSession();
 
   const { data: secretMessage } = api.example.getSecretMessage.useQuery(
-    undefined, // no input
     { enabled: sessionData?.user !== undefined },
   );
 

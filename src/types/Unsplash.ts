@@ -82,7 +82,6 @@ export interface UnsplashRandomImageJSON {
   user: User;
 }
 
-// TODO
 export interface UnsplashRandomImage {
   width: number;
   height: number;
