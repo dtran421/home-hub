@@ -15,24 +15,20 @@ import { WarningAlert } from "@/components/Alerts/WarningAlert";
 import { NavMenu } from "@/components/NavMenu";
 import { useGetUser, useUpdateUser } from "@/hooks/User";
 import { use3DayForecast } from "@/hooks/Weather";
-import {
-  type ForecastDay,
-  type ForecastLocation,
-  type WeatherForecastJSON,
-} from "@/types/Weather";
+import { WeatherForecast } from "@/types/Weather";
 
 const Weather = () => {
   const { data: session, status: sessionStatus } = useSession();
 
   const {
     user,
-    isFetching: isFetchingUser,
+    isLoading: isLoadingUser,
     isError,
     error,
   } = useGetUser(session);
   const updateUser = useUpdateUser();
 
-  const { forecast, isFetching: isFetchingForecast } = use3DayForecast(
+  const { forecast, isLoading: isLoadingForecast } = use3DayForecast(
     user?.city,
   );
 
@@ -59,7 +55,7 @@ const Weather = () => {
   };
 
   const loadingUser =
-    sessionStatus === "loading" || isFetchingUser || updateUser.isLoading;
+    sessionStatus === "loading" || isLoadingUser || updateUser.isLoading;
 
   return (
     <div className="flex h-screen w-full flex-col items-center bg-cover bg-center p-4">
@@ -73,7 +69,7 @@ const Weather = () => {
             !user?.city ? "input-primary" : ""
           } input-md w-full max-w-xs text-center text-primary`}
         />
-        {loadingUser || isFetchingUser ? (
+        {loadingUser || isLoadingUser ? (
           <div className="mt-6">
             <span className="loading loading-spinner loading-md text-accent" />
           </div>
@@ -85,12 +81,12 @@ const Weather = () => {
           </div>
         ) : null}
       </form>
-      {isFetchingForecast ? (
+      {isLoadingForecast ? (
         <span className="loading loading-spinner loading-md text-accent" />
       ) : (
         <>
           <WeatherHeader location={forecast?.location} />
-          <WeatherForecast forecast={forecast} />
+          <WeatherForecast forecasts={forecast?.forecasts} />
         </>
       )}
       <NavMenu />
@@ -103,7 +99,7 @@ const Weather = () => {
 };
 
 interface WeatherHeaderProps {
-  location: ForecastLocation | undefined;
+  location: WeatherForecast["location"] | undefined;
 }
 
 const WeatherHeader = ({ location }: WeatherHeaderProps) => {
@@ -111,7 +107,7 @@ const WeatherHeader = ({ location }: WeatherHeaderProps) => {
     return null;
   }
 
-  const date = new Date(location.localtime);
+  const date = new Date(location.localTime);
   const day = date.toLocaleDateString("en-us", {
     weekday: "long",
     year: "numeric",
@@ -140,35 +136,29 @@ const WeatherHeader = ({ location }: WeatherHeaderProps) => {
 };
 
 interface WeatherForecastProps {
-  forecast: WeatherForecastJSON | undefined;
+  forecasts: WeatherForecast["forecasts"] | undefined;
 }
 
-const WeatherForecast = (props: WeatherForecastProps) => {
-  if (!props.forecast) {
+const WeatherForecast = ({ forecasts }: WeatherForecastProps) => {
+  if (!forecasts) {
     return null;
   }
 
-  const { forecast } = props.forecast;
-
   return (
     <div className="mt-10 flex w-full flex-row justify-center">
-      {forecast.forecastday.map((day) => (
-        <WeatherDay key={day.date} forecastDay={day} />
+      {forecasts.map((day) => (
+        <WeatherDay key={day.date} dailyForecast={day} />
       ))}
     </div>
   );
 };
 
 interface WeatherDayProps {
-  forecastDay: ForecastDay;
+  dailyForecast: WeatherForecast["forecasts"][0];
 }
 
-const WeatherDay = (props: WeatherDayProps) => {
-  const {
-    forecastDay: { date: forecastDate, astro, day },
-  } = props;
-
-  // console.log(day);
+const WeatherDay = ({ dailyForecast }: WeatherDayProps) => {
+  const { date: forecastDate, astro } = dailyForecast;
 
   const date = new Date(forecastDate);
   const dayOfWeek = date.toLocaleDateString("en-us", { weekday: "long" });
@@ -178,17 +168,19 @@ const WeatherDay = (props: WeatherDayProps) => {
   });
 
   const hasPrecipitation =
-    day.daily_will_it_rain > 0 || day.daily_will_it_snow > 0;
+    dailyForecast.dailyWillItRain || dailyForecast.dailyWillItSnow;
   const precipitationType =
-    day.daily_chance_of_rain > day.daily_chance_of_snow ? "rain" : "snow";
+    dailyForecast.dailyChanceOfRain > dailyForecast.dailyChanceOfSnow
+      ? "rain"
+      : "snow";
   const units = precipitationType === "rain" ? "in" : "cm";
 
   return (
     <div className="card mx-4 w-72 bg-neutral shadow-xl">
       <figure className="px-8 pt-8">
         <Image
-          src={`https:${day.condition.icon}`}
-          alt={day.condition.text}
+          src={`https:${dailyForecast.condition.icon}`}
+          alt={dailyForecast.condition.text}
           className="mb-4 mt-2 h-20 w-20"
           width={64}
           height={64}
@@ -200,16 +192,16 @@ const WeatherDay = (props: WeatherDayProps) => {
       </div>
       <div className="mb-4 mt-6">
         <h1 className="mb-1 text-center text-3xl font-semibold">
-          {day.avgtemp_f}° F
+          {dailyForecast.avgTempF}° F
         </h1>
         <div className="flex justify-center gap-3">
           <div className="flex items-center gap-2">
             <FiTrendingDown />
-            <p>{day.mintemp_f}</p>
+            <p>{dailyForecast.minTempF}</p>
           </div>
           <div className="flex items-center gap-2">
             <FiTrendingUp />
-            <p>{day.maxtemp_f}</p>
+            <p>{dailyForecast.maxTempF}</p>
           </div>
         </div>
       </div>
@@ -225,11 +217,11 @@ const WeatherDay = (props: WeatherDayProps) => {
           </div>
         </div>
         <div>
-          <p>{day.condition.text}</p>
+          <p>{dailyForecast.condition.text}</p>
           {hasPrecipitation ? (
             <p>
               Expected {precipitationType}:{" "}
-              {day.totalprecip_in || day.totalsnow_cm} {units}
+              {dailyForecast.totalPrecipIn || dailyForecast.totalSnowCm} {units}
             </p>
           ) : null}
         </div>

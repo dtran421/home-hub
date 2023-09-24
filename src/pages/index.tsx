@@ -40,7 +40,12 @@ const Home = () => {
     required: false,
   });
 
-  const { user, isFetching, isError, error } = useGetUser(session);
+  const {
+    user,
+    isLoading: isLoadingUser,
+    isError,
+    error,
+  } = useGetUser(session);
   const updateUser = useUpdateUser();
 
   const [showEditor, toggleShowEditor] = useState(session && !user?.name);
@@ -83,7 +88,7 @@ const Home = () => {
 
   const signInCallbackUrl = router.query.callbackUrl as string | undefined;
 
-  const loading = isFetching || updateUser.isLoading;
+  const loading = isLoadingUser || updateUser.isLoading;
   const headerText = getHeaderText(
     session,
     user,

@@ -75,18 +75,18 @@ export const unsplashRouter = createTRPCRouter({
 
         return ApiResponse<UnsplashRandomImage>(processResponse(data));
       } catch (error) {
-        if (error instanceof Error) {
-          if (axios.isAxiosError(error)) {
-            console.error("Something went wrong with axios: ", error.toJSON());
-          } else {
-            console.error("Something went wrong: ", error.message);
-          }
-          return ApiResponse<UnsplashRandomImage>(error);
+        if (!(error instanceof Error)) {
+          return ApiResponse<UnsplashRandomImage>(
+            new Error("500 Internal Error"),
+          );
         }
 
-        return ApiResponse<UnsplashRandomImage>(
-          new Error("500 Internal Error"),
-        );
+        if (axios.isAxiosError(error)) {
+          console.error("Something went wrong with axios: ", error.toJSON());
+        } else {
+          console.error("Something went wrong: ", error.message);
+        }
+        return ApiResponse<UnsplashRandomImage>(error);
       }
     }),
 });

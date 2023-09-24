@@ -11,7 +11,7 @@ import { generateQueryKey, getError } from "@/utils/query";
 export const useGetUser = (session: Session | null) => {
   const {
     data,
-    isFetching,
+    isLoading,
     isError,
     error: queryError,
   } = api.users.get.useQuery(undefined, {
@@ -32,7 +32,7 @@ export const useGetUser = (session: Session | null) => {
 
   return {
     user: !isErr ? maybeUser.unwrap() : null,
-    isFetching,
+    isLoading,
     isError: isErr || isError,
     error,
   };

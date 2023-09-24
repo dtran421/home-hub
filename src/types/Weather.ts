@@ -111,8 +111,50 @@ export interface WeatherForecastJSON {
 
 // TODO
 export interface WeatherForecast {
-  forecasts: {
-    date: string;
-    day: Omit<DailyForecast, "condition">;
-  }[];
+  location: Pick<ForecastLocation, "name" | "region"> & {
+    tzId: string;
+    localTime: string;
+  };
+  forecasts: (Pick<ForecastDay, "date"> &
+    Pick<DailyForecast, "condition" | "uv"> & {
+      maxTempF: number;
+      minTempF: number;
+      avgTempF: number;
+      maxWindMph: number;
+      totalPrecipIn: number;
+      totalSnowCm: number;
+      avgVisMiles: number;
+      avgHumidity: number;
+      dailyWillItRain: boolean;
+      dailyChanceOfRain: number;
+      dailyWillItSnow: boolean;
+      dailyChanceOfSnow: number;
+
+      astro: Pick<AstroData, "sunrise" | "sunset"> & {
+        moonPhase: string;
+        isMoonUp: boolean;
+        isSunUp: boolean;
+      };
+
+      hourly: (Pick<
+        HourlyForecast,
+        "time" | "condition" | "humidity" | "cloud" | "uv"
+      > & {
+        timeEpoch: number;
+        tempF: number;
+        windMph: number;
+        windDegree: number;
+        windDir: string;
+        precipIn: number;
+        feelsLikeF: number;
+        windChillF: number;
+        heatIndexF: number;
+        willItRain: boolean;
+        chanceOfRain: number;
+        willItSnow: boolean;
+        chanceOfSnow: number;
+        visMiles: number;
+        gustMph: number;
+      })[];
+    })[];
 }
