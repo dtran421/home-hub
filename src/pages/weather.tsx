@@ -1,5 +1,6 @@
-import { type FormEvent, useEffect,useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 import {
   FiArrowUp,
   FiMinus,
@@ -9,14 +10,26 @@ import {
   FiTrendingUp,
 } from "react-icons/fi";
 
+import { ErrorAlert } from "@/components/Alerts/ErrorAlert";
 import { WarningAlert } from "@/components/Alerts/WarningAlert";
 import { NavMenu } from "@/components/NavMenu";
 import { useGetUser, useUpdateUser } from "@/hooks/User";
 import { use3DayForecast } from "@/hooks/Weather";
-import { type ForecastDay, type WeatherForecastJSON } from "@/types/Weather";
+import {
+  type ForecastDay,
+  type ForecastLocation,
+  type WeatherForecastJSON,
+} from "@/types/Weather";
 
 const Weather = () => {
-  const { user, isLoading: isLoadingUser } = useGetUser();
+  const { data: session, status: sessionStatus } = useSession();
+
+  const {
+    user,
+    isFetching: isFetchingUser,
+    isError,
+    error,
+  } = useGetUser(session);
   const updateUser = useUpdateUser();
 
   const { forecast, isFetching: isFetchingForecast } = use3DayForecast(
@@ -42,8 +55,11 @@ const Weather = () => {
       return;
     }
 
-    updateUser.mutate({ id: "1", city: newCity });
+    updateUser.mutate({ city: newCity });
   };
+
+  const loadingUser =
+    sessionStatus === "loading" || isFetchingUser || updateUser.isLoading;
 
   return (
     <div className="flex h-screen w-full flex-col items-center bg-cover bg-center p-4">
@@ -57,44 +73,43 @@ const Weather = () => {
             !user?.city ? "input-primary" : ""
           } input-md w-full max-w-xs text-center text-primary`}
         />
-        {updateUser.isLoading ? (
+        {loadingUser || isFetchingUser ? (
           <div className="mt-6">
-            <span className="loading-mdtext-accent loading loading-spinner" />
+            <span className="loading loading-spinner loading-md text-accent" />
           </div>
         ) : null}
-        {!user?.city ? (
+        {!loadingUser && !user?.city ? (
           <div className="mt-6 flex flex-col items-center gap-y-2">
             <FiArrowUp size={20} />
             <p className="text-neutral-content">Enter a city to get started</p>
           </div>
         ) : null}
       </form>
-      {isLoadingUser || isFetchingForecast ? (
+      {isFetchingForecast ? (
         <span className="loading loading-spinner loading-md text-accent" />
       ) : (
         <>
-          <WeatherHeader forecast={forecast} />
+          <WeatherHeader location={forecast?.location} />
           <WeatherForecast forecast={forecast} />
         </>
       )}
       <NavMenu />
-      {warning && (
+      {!isError && warning && (
         <WarningAlert message={warning} onClose={() => setWarning("")} />
       )}
+      {isError && <ErrorAlert message={error?.message} />}
     </div>
   );
 };
 
 interface WeatherHeaderProps {
-  forecast: WeatherForecastJSON | undefined;
+  location: ForecastLocation | undefined;
 }
 
-const WeatherHeader = (props: WeatherHeaderProps) => {
-  if (!props.forecast) {
+const WeatherHeader = ({ location }: WeatherHeaderProps) => {
+  if (!location) {
     return null;
   }
-
-  const { location } = props.forecast;
 
   const date = new Date(location.localtime);
   const day = date.toLocaleDateString("en-us", {

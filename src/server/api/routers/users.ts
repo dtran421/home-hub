@@ -1,37 +1,22 @@
 import { eq } from "drizzle-orm";
+import { ApiResponse, Option } from "utils-toolkit";
 import { z } from "zod";
 
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { type User, users } from "@/server/db/schema";
 
 export const usersRouter = createTRPCRouter({
-  get: publicProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const user = await ctx.db.query.users.findFirst({
-        where: eq(users.id, input.id),
-      });
+  get: protectedProcedure.query(async ({ ctx }) => {
+    const user = await ctx.db.query.users.findFirst({
+      where: eq(users.id, ctx.session.user.id),
+    });
 
-      return user ?? null;
-    }),
+    return ApiResponse(Option(user).coalesce());
+  }),
 
-  insert: publicProcedure
-    .input(z.object({ name: z.string(), city: z.string().optional() }))
-    .mutation(async ({ ctx, input }) => {
-      const user = await ctx.db.insert(users).values({
-        id: "1",
-        name: input.name,
-        email: "abc@acme.org",
-        city: input.city,
-      });
-
-      return user;
-    }),
-
-  update: publicProcedure
+  update: protectedProcedure
     .input(
       z.object({
-        id: z.string(),
         name: z.string().optional(),
         city: z.string().optional(),
       }),
@@ -47,11 +32,11 @@ export const usersRouter = createTRPCRouter({
         userObj.city = input.city;
       }
 
-      const user = await ctx.db
+      await ctx.db
         .update(users)
         .set(userObj)
-        .where(eq(users.id, "1"));
+        .where(eq(users.id, ctx.session.user.id));
 
-      return user;
+      console.info(`Successfully updated user ${ctx.session.user.id}`);
     }),
 });

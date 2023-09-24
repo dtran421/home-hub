@@ -1,51 +1,17 @@
 import { useCallback } from "react";
-import { consumeApiResponse, Option } from "utils-toolkit";
+import { ApiResponse, consumeApiResponse, Option } from "utils-toolkit";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { TRPCClientError, type TRPCClientErrorLike } from "@trpc/client";
 
-import { type AppRouter, type TRPCRouterLike } from "@/server/api/root";
+import { type TRPCRouterLike } from "@/server/api/root";
+import { type UnsplashRandomImage } from "@/types/Unsplash";
 import { api } from "@/utils/api";
-import { generateQueryKey } from "@/utils/query";
+import { generateQueryKey, getError } from "@/utils/query";
 
 const DEFAULT_PARAMS = {
   topics: "nature",
   orientation: "landscape",
-};
-
-const getError = ({
-  isServerError,
-  isUncaughtError,
-  responseError,
-  uncaughtError,
-}: {
-  isServerError?: boolean;
-  isUncaughtError?: boolean;
-  responseError?: Error | null;
-  uncaughtError?: TRPCClientErrorLike<AppRouter> | null;
-}) => {
-  const genericError = new TRPCClientError(
-    "Something went wrong! Please refresh the page.",
-  );
-
-  if (isUncaughtError) {
-    console.error(uncaughtError ?? genericError);
-    return uncaughtError ?? genericError;
-  }
-
-  if (isServerError && responseError) {
-    console.error(responseError ?? genericError);
-    return (
-      new TRPCClientError(responseError.message, {
-        cause: responseError,
-        meta: {
-          ...responseError,
-        },
-      }) ?? genericError
-    );
-  }
-
-  return null;
+  query: "outdoors landscape nature beautiful",
 };
 
 export const useGetUnsplashImage = () => {
@@ -62,10 +28,13 @@ export const useGetUnsplashImage = () => {
     staleTime: 1000 * 60 * 20, // 20 minutes
   });
 
-  const maybeImg = consumeApiResponse(Option(data).coalesce());
+  const apiResponse = Option(data).coalesce(
+    ApiResponse<UnsplashRandomImage>(null),
+  );
+  const maybeImg = consumeApiResponse(apiResponse);
   const isErr = !maybeImg.ok;
 
-  const error: TRPCClientErrorLike<AppRouter> | null = getError({
+  const error = getError({
     isServerError: isErr,
     isUncaughtError: isError,
     responseError: isErr ? maybeImg.unwrap() : null,

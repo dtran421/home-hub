@@ -14,6 +14,7 @@ export const env = createEnv({
       .default("development"),
 
     DATABASE_URL: z.string().url().min(1),
+    DEV_DATABASE_URL: z.string().url().min(1),
 
     NEXTAUTH_SECRET:
       process.env.NODE_ENV === "production"
@@ -53,6 +54,7 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
 
     DATABASE_URL: process.env.DATABASE_URL,
+    DEV_DATABASE_URL: process.env.DEV_DATABASE_URL,
 
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
@@ -71,3 +73,5 @@ export const env = createEnv({
    */
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });
+
+export const IS_PROD = env.NODE_ENV === "production";

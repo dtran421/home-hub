@@ -10,7 +10,7 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 
-export const users = mysqlTable("users", {
+export const users = mysqlTable("user", {
   id: varchar("id", { length: 191 })
     .primaryKey()
     .notNull()
@@ -21,6 +21,7 @@ export const users = mysqlTable("users", {
     mode: "date",
     fsp: 3,
   }).default(sql`CURRENT_TIMESTAMP(3)`),
+  image: varchar("image", { length: 255 }),
   city: varchar("city", { length: 255 }),
 });
 
@@ -32,7 +33,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 }));
 
 export const accounts = mysqlTable(
-  "accounts",
+  "account",
   {
     userId: varchar("userId", { length: 255 }).notNull(),
     type: varchar("type", { length: 255 })
@@ -59,7 +60,7 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 }));
 
 export const sessions = mysqlTable(
-  "sessions",
+  "session",
   {
     sessionToken: varchar("sessionToken", { length: 255 })
       .notNull()
@@ -77,7 +78,7 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
 }));
 
 export const verificationTokens = mysqlTable(
-  "verificationTokens",
+  "verificationToken",
   {
     identifier: varchar("identifier", { length: 255 }).notNull(),
     token: varchar("token", { length: 255 }).notNull(),

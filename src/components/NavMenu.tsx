@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { FiCalendar, FiCloud, FiDollarSign, FiHome } from "react-icons/fi";
+import { signOut, useSession } from "next-auth/react";
+import {
+  FiCalendar,
+  FiCloud,
+  FiDollarSign,
+  FiHome,
+  FiLogOut,
+} from "react-icons/fi";
+import { cn } from "utils-toolkit";
 
 const LINKS = [
   {
@@ -22,12 +30,18 @@ const LINKS = [
 ];
 
 export const NavMenu = () => {
+  const session = useSession();
   const router = useRouter();
+
+  if (!session.data?.user) {
+    return null;
+  }
+
   const activePage = router.pathname.slice(1) || "";
 
   return (
-    <div className="absolute bottom-4 z-50">
-      <ul className="menu menu-horizontal bg-base-200 rounded-box">
+    <div className="absolute bottom-4 z-50 flex gap-x-2">
+      <ul className="menu rounded-box menu-horizontal bg-base-200">
         {LINKS.map((link) => (
           <li
             key={link.href}
@@ -39,6 +53,13 @@ export const NavMenu = () => {
           </li>
         ))}
       </ul>
+      <button
+        title="Logout"
+        className={cn("btn btn-square", "rounded-2xl")}
+        onClick={() => void signOut({ callbackUrl: "/" })}
+      >
+        <FiLogOut />
+      </button>
     </div>
   );
 };

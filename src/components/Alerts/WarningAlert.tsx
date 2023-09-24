@@ -6,18 +6,22 @@ interface WarningAlertProps {
 }
 
 export const WarningAlert = ({ message, onClose }: WarningAlertProps) => {
-  console.warn(message);
-
   const [show, setShow] = useState(!!message);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    if (!isInitialized) {
+      console.warn(message);
+      setIsInitialized(true);
+    }
+
     const timeout = setTimeout(() => {
       setShow(false);
       onClose();
     }, 5000);
 
     return () => clearTimeout(timeout);
-  }, [onClose]);
+  }, [isInitialized, message, onClose]);
 
   return show ? (
     <div className="absolute bottom-2 left-2">

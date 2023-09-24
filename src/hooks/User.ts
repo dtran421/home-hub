@@ -1,50 +1,39 @@
+import { type Session } from "next-auth";
+import { ApiResponse, consumeApiResponse, Option } from "utils-toolkit";
+
 import { useQueryClient } from "@tanstack/react-query";
 
+import { type TRPCRouterLike } from "@/server/api/root";
+import { type User } from "@/server/db/schema";
 import { api } from "@/utils/api";
-import { generateQueryKey } from "@/utils/query";
+import { generateQueryKey, getError } from "@/utils/query";
 
-export const useGetUser = () => {
+export const useGetUser = (session: Session | null) => {
   const {
-    data: user,
-    isLoading,
+    data,
+    isFetching,
     isError,
-    error,
-  } = api.users.get.useQuery(
-    {
-      id: "1",
-    },
-    {
-      retry: false,
-    },
-  );
+    error: queryError,
+  } = api.users.get.useQuery(undefined, {
+    retry: false,
+    enabled: !!session?.user?.id,
+  });
+
+  const apiResponse = Option(data).coalesce(ApiResponse<User>(null));
+  const maybeUser = consumeApiResponse(apiResponse);
+  const isErr = !maybeUser.ok;
+
+  const error = getError({
+    isServerError: isErr,
+    isUncaughtError: isError,
+    responseError: isErr ? maybeUser.unwrap() : null,
+    uncaughtError: queryError,
+  });
 
   return {
-    user,
-    isLoading,
-    isError,
-    error,
-  };
-};
-
-export const useCreateUser = () => {
-  const queryClient = useQueryClient();
-
-  const { mutate, isLoading, isSuccess, isError, error } =
-    api.users.insert.useMutation({
-      onSuccess: () => {
-        void queryClient.invalidateQueries(
-          generateQueryKey(api.users.get, {
-            id: "1",
-          }),
-        );
-      },
-    });
-
-  return {
-    mutate,
-    isLoading,
-    isSuccess,
-    isError,
+    user: !isErr ? maybeUser.unwrap() : null,
+    isFetching,
+    isError: isErr || isError,
     error,
   };
 };
@@ -56,9 +45,8 @@ export const useUpdateUser = () => {
     api.users.update.useMutation({
       onSuccess: () => {
         void queryClient.invalidateQueries(
-          generateQueryKey(api.users.get, {
-            id: "1",
-          }),
+          // TODO: this typing needs to be fixed lol
+          generateQueryKey(api.users.get as unknown as TRPCRouterLike),
         );
       },
     });

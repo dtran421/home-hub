@@ -7,24 +7,28 @@ interface ErrorAlertProps {
 }
 
 export const ErrorAlert = (props: ErrorAlertProps) => {
-  console.error(props.message ? props.message : props.error?.stack);
-
   const [show, setShow] = useState(!!props.message || !!props.error);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    if (!isInitialized) {
+      console.error(props.message ? props.message : props.error?.stack);
+      setIsInitialized(true);
+    }
+
     const timeout = setTimeout(() => {
       setShow(false);
     }, 5000);
 
     return () => clearTimeout(timeout);
-  }, []);
+  }, [isInitialized, props.error?.stack, props.message]);
 
   return show ? (
-    <div className="absolute left-2 bottom-2">
+    <div className="absolute bottom-2 left-2">
       <div className="alert alert-error">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="stroke-current shrink-0 h-6 w-6"
+          className="h-6 w-6 shrink-0 stroke-current"
           fill="none"
           viewBox="0 0 24 24"
         >
@@ -36,7 +40,10 @@ export const ErrorAlert = (props: ErrorAlertProps) => {
           />
         </svg>
         <span>{props.message ? props.message : props.error?.message}</span>
-        <button className="btn btn-square btn-outline btn-xs" onClick={() => setShow(false)}>
+        <button
+          className="btn btn-square btn-outline btn-xs"
+          onClick={() => setShow(false)}
+        >
           <FiX size={14} />
         </button>
       </div>

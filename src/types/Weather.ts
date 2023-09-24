@@ -85,7 +85,7 @@ export interface ForecastDay {
   hour: HourlyForecast[];
 }
 
-export interface Location {
+export interface ForecastLocation {
   name: string;
   region: string;
   country: string;
@@ -102,7 +102,7 @@ export type CurrentForecast = Forecast & {
 };
 
 export interface WeatherForecastJSON {
-  location: Location;
+  location: ForecastLocation;
   current: CurrentForecast;
   forecast: {
     forecastday: ForecastDay[];

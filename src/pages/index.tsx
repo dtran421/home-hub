@@ -1,25 +1,57 @@
-import { type FormEvent, type ReactNode,useEffect, useState } from "react";
+import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import Head from "next/head";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/router";
+import { type Session } from "next-auth";
+import { signIn, useSession } from "next-auth/react";
+import { FcGoogle } from "react-icons/fc";
 import { FiEdit2, FiRefreshCw } from "react-icons/fi";
 import { cn } from "utils-toolkit";
 
 import { ErrorAlert } from "@/components/Alerts/ErrorAlert";
+import { WarningAlert } from "@/components/Alerts/WarningAlert";
 import { NavMenu } from "@/components/NavMenu";
 import { useGetUnsplashImage } from "@/hooks/Unsplash";
-import { useCreateUser, useGetUser, useUpdateUser } from "@/hooks/User";
+import { useGetUser, useUpdateUser } from "@/hooks/User";
+import { type User } from "@/server/db/schema";
+
+const getHeaderText = (
+  session: Session | null,
+  user: User | null,
+  loading: boolean,
+) => {
+  if (loading) {
+    return "Loading...";
+  }
+
+  if (user) {
+    return `Welcome home, ${user.name ?? "stranger"}`;
+  }
+
+  if (session) {
+    return "Hello, what may I call you?";
+  }
+
+  return "Sign in to get started";
+};
 
 const Home = () => {
-  const { user, isLoading, isError, error } = useGetUser();
-  const createUser = useCreateUser();
+  const router = useRouter();
+  const { data: session, status: sessionStatus } = useSession({
+    required: false,
+  });
+
+  const { user, isFetching, isError, error } = useGetUser(session);
   const updateUser = useUpdateUser();
 
-  const [showEditor, toggleShowEditor] = useState(!user?.name);
+  const [showEditor, toggleShowEditor] = useState(session && !user?.name);
   useEffect(() => {
-    toggleShowEditor(!user?.name);
-  }, [user?.name]);
+    toggleShowEditor(session && !user?.name);
+  }, [session, user?.name]);
 
   const [name, setName] = useState(user?.name ?? "");
+  useEffect(() => {
+    setName(user?.name ?? "");
+  }, [user?.name]);
 
   const [time, setTime] = useState(new Date());
   useEffect(() => {
@@ -34,26 +66,29 @@ const Home = () => {
     }
   }, [refreshBg]);
 
+  const [customError, setCustomError] = useState("");
+  useEffect(() => {
+    if (customError) {
+      setTimeout(() => setCustomError(""), 5000);
+    }
+  }, [customError]);
+
   const submitHandler = (e: FormEvent) => {
     e.preventDefault();
 
-    if (user === null) {
-      return createUser.mutate({ name });
-    }
-
     updateUser.mutate({
-      id: "1",
       name,
     });
   };
 
-  const loading = isLoading || createUser.isLoading || updateUser.isLoading;
-  let headerText;
-  if (!showEditor) {
-    headerText = `Welcome home, ${user?.name ?? "stranger"}`;
-  } else if (!loading) {
-    headerText = "Hello, what may I call you?";
-  }
+  const signInCallbackUrl = router.query.callbackUrl as string | undefined;
+
+  const loading = isFetching || updateUser.isLoading;
+  const headerText = getHeaderText(
+    session,
+    user,
+    loading || sessionStatus === "loading",
+  );
 
   return (
     <>
@@ -80,6 +115,18 @@ const Home = () => {
                 {headerText}
               </h1>
             )}
+            {!loading && !session && (
+              <button
+                className="btn btn-neutral btn-wide"
+                onClick={() =>
+                  void signIn("google", {
+                    callbackUrl: signInCallbackUrl ?? "/",
+                  })
+                }
+              >
+                <FcGoogle size={20} /> Sign in with Google
+              </button>
+            )}
             {!loading && showEditor && (
               <form onSubmit={submitHandler}>
                 <input
@@ -89,7 +136,7 @@ const Home = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
-                {(createUser.isLoading || updateUser.isLoading) && (
+                {updateUser.isLoading && (
                   <span className="loading loading-spinner loading-md text-accent" />
                 )}
               </form>
@@ -107,13 +154,27 @@ const Home = () => {
         <div className="absolute bottom-4 right-4">
           <button
             className="btn btn-circle text-accent"
-            onClick={() => toggleRefreshBg(true)}
+            onClick={() => {
+              if (!user) {
+                setCustomError("Please sign in to refresh the background");
+                return;
+              }
+              toggleRefreshBg(true);
+            }}
           >
             <FiRefreshCw size={20} />
           </button>
         </div>
         <NavMenu />
         {isError && <ErrorAlert message={error?.message} />}
+        {customError && (
+          <WarningAlert
+            message={customError}
+            onClose={() => {
+              setCustomError("");
+            }}
+          />
+        )}
       </BackgroundContainer>
     </>
   );
@@ -148,28 +209,5 @@ const BackgroundContainer = (props: BackgroundContainerProps) => {
     </main>
   );
 };
-
-/* function AuthShowcase() {
-  const { data: sessionData } = useSession();
-
-  const { data: secretMessage } = api.example.getSecretMessage.useQuery(
-    { enabled: sessionData?.user !== undefined },
-  );
-
-  return (
-    <div className="flex flex-col items-center justify-center gap-4">
-      <p className="text-center text-2xl text-white">
-        {sessionData && <span>Logged in as {sessionData.user?.name}</span>}
-        {secretMessage && <span> - {secretMessage}</span>}
-      </p>
-      <button
-        className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-        onClick={sessionData ? () => void signOut() : () => void signIn()}
-      >
-        {sessionData ? "Sign out" : "Sign in"}
-      </button>
-    </div>
-  );
-} */
 
 export default Home;
