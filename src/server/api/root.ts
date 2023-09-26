@@ -4,10 +4,12 @@ import { type inferReactQueryProcedureOptions } from "@trpc/react-query";
 import { type RouterLike, type UtilsLike } from "@trpc/react-query/shared";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 
-import { IS_PROD } from "@/env.mjs";
 import { unsplashRouter } from "@/server/api/routers/unsplash";
 import { createTRPCRouter } from "@/server/api/trpc";
 
+import { IS_PROD } from "../utils";
+
+import { nylasRouter } from "./routers/nylas";
 import { usersRouter } from "./routers/users";
 import { weatherRouter } from "./routers/weather";
 
@@ -72,6 +74,7 @@ export const appRouter = createTRPCRouter({
   unsplash: unsplashRouter,
   users: usersRouter,
   weather: weatherRouter,
+  nylas: nylasRouter,
 });
 
 // export type definition of API

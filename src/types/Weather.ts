@@ -109,7 +109,6 @@ export interface WeatherForecastJSON {
   };
 }
 
-// TODO
 export interface WeatherForecast {
   location: Pick<ForecastLocation, "name" | "region"> & {
     tzId: string;

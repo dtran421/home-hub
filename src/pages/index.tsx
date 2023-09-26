@@ -88,12 +88,9 @@ const Home = () => {
 
   const signInCallbackUrl = router.query.callbackUrl as string | undefined;
 
-  const loading = isLoadingUser || updateUser.isLoading;
-  const headerText = getHeaderText(
-    session,
-    user,
-    loading || sessionStatus === "loading",
-  );
+  const loadingUser =
+    sessionStatus === "loading" || isLoadingUser || updateUser.isLoading;
+  const headerText = getHeaderText(session, user, loadingUser);
 
   return (
     <>
@@ -113,14 +110,14 @@ const Home = () => {
             </button>
           )}
           <div className="flex flex-col items-center space-y-8 rounded-md bg-neutral/30 px-8 py-6 backdrop-blur-sm">
-            {loading ? (
+            {loadingUser ? (
               <span className="loading loading-bars loading-md text-accent" />
             ) : (
               <h1 className="text-center font-mono text-2xl font-bold text-gray-100">
                 {headerText}
               </h1>
             )}
-            {!loading && !session && (
+            {!loadingUser && !session && (
               <button
                 className="btn btn-neutral btn-wide"
                 onClick={() =>
@@ -132,7 +129,7 @@ const Home = () => {
                 <FcGoogle size={20} /> Sign in with Google
               </button>
             )}
-            {!loading && showEditor && (
+            {!loadingUser && showEditor && (
               <form onSubmit={submitHandler}>
                 <input
                   type="text"
@@ -146,7 +143,7 @@ const Home = () => {
                 )}
               </form>
             )}
-            {!loading && user?.name ? (
+            {!loadingUser && user?.name ? (
               <h2 className="text-center font-mono text-6xl font-bold text-white">
                 {time.toLocaleTimeString([], {
                   hour: "2-digit",

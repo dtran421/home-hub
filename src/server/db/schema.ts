@@ -3,12 +3,16 @@ import { relations, sql } from "drizzle-orm";
 import {
   index,
   int,
+  mysqlEnum,
   mysqlTable,
   primaryKey,
   text,
   timestamp,
   varchar,
 } from "drizzle-orm/mysql-core";
+
+import { NylasAuthProvider } from "@/types/Nylas";
+import { UserRoles } from "@/types/User";
 
 export const users = mysqlTable("user", {
   id: varchar("id", { length: 191 })
@@ -23,13 +27,19 @@ export const users = mysqlTable("user", {
   }).default(sql`CURRENT_TIMESTAMP(3)`),
   image: varchar("image", { length: 255 }),
   city: varchar("city", { length: 255 }),
+  role: mysqlEnum("role", UserRoles).notNull().default("user"),
 });
 
-export type User = typeof users.$inferSelect; // return type when queried
-export type NewUser = typeof users.$inferInsert; // insert type
+// return type when queried
+export type User = typeof users.$inferSelect & {
+  nylasAccounts?: Partial<typeof nylasAccounts.$inferSelect>[];
+};
+// insert type
+export type NewUser = typeof users.$inferInsert;
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
+  nylasAccounts: many(nylasAccounts),
 }));
 
 export const accounts = mysqlTable(
@@ -57,6 +67,23 @@ export const accounts = mysqlTable(
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
   user: one(users, { fields: [accounts.userId], references: [users.id] }),
+}));
+
+export const nylasAccounts = mysqlTable(
+  "nylasAccount",
+  {
+    userId: varchar("userId", { length: 255 }).notNull(),
+    provider: mysqlEnum("provider", NylasAuthProvider).notNull(),
+    accessToken: text("accessToken").notNull(),
+  },
+  (account) => ({
+    compoundKey: primaryKey(account.provider, account.userId),
+    userIdIdx: index("userId_idx").on(account.userId),
+  }),
+);
+
+export const nylasAccountsRelations = relations(nylasAccounts, ({ one }) => ({
+  user: one(users, { fields: [nylasAccounts.userId], references: [users.id] }),
 }));
 
 export const sessions = mysqlTable(

@@ -4,7 +4,6 @@ import { ApiResponse, consumeApiResponse, Option } from "utils-toolkit";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { type TRPCRouterLike } from "@/server/api/root";
-import { type User } from "@/server/db/schema";
 import { api } from "@/utils/api";
 import { generateQueryKey, getError } from "@/utils/query";
 
@@ -19,7 +18,7 @@ export const useGetUser = (session: Session | null) => {
     enabled: !!session?.user?.id,
   });
 
-  const apiResponse = Option(data).coalesce(ApiResponse<User>(null));
+  const apiResponse = Option(data).coalesce(ApiResponse(null));
   const maybeUser = consumeApiResponse(apiResponse);
   const isErr = !maybeUser.ok;
 
@@ -31,7 +30,7 @@ export const useGetUser = (session: Session | null) => {
   });
 
   return {
-    user: !isErr ? maybeUser.unwrap() : null,
+    user: !isErr ? maybeUser.unwrap().coalesce() : null,
     isLoading,
     isError: isErr || isError,
     error,

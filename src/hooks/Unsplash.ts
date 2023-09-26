@@ -50,7 +50,7 @@ export const useGetUnsplashImage = () => {
   }, [queryClient]);
 
   return {
-    img: !isErr ? maybeImg.unwrap() : null,
+    img: !isErr ? maybeImg.unwrap().coalesce() : null,
     isLoading,
     isError: isErr || isError,
     error,

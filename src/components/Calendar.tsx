@@ -1,4 +1,11 @@
-import { type Dispatch, Fragment, type SetStateAction, useCallback, useReducer,useState } from "react";
+import {
+  type Dispatch,
+  Fragment,
+  type SetStateAction,
+  useCallback,
+  useReducer,
+  useState,
+} from "react";
 
 import {
   CalendarNav,
@@ -18,7 +25,9 @@ import {
 // * make sure to import the calendar css before components
 import "@mobiscroll/react/dist/css/mobiscroll.min.css";
 
-const getCalendarView = (view: string): MbscEventcalendarView => {
+type MbscCalendarViewType = "day" | "week" | "month" /* | "year" */;
+
+const getCalendarView = (view: MbscCalendarViewType): MbscEventcalendarView => {
   switch (view) {
     case "month":
       return {
@@ -44,7 +53,7 @@ interface CalendarView {
 }
 
 interface CalendarProps {
-  events: MbscCalendarEvent[] | undefined;
+  events: MbscCalendarEvent[] | null;
   setError: Dispatch<SetStateAction<string>>;
 }
 
@@ -61,7 +70,10 @@ export const Calendar = (props: CalendarProps) => {
     setToastOpen(true);
   }, []);
 
-  const viewReducer = (_state: CalendarView, action: { type: string }) => {
+  const viewReducer = (
+    _state: CalendarView,
+    action: { type: MbscCalendarViewType },
+  ) => {
     return {
       type: action.type,
       view: getCalendarView(action.type),
@@ -74,15 +86,18 @@ export const Calendar = (props: CalendarProps) => {
   });
 
   return (
-    <Page className="w-full h-full">
+    <Page className="h-full w-full">
       <Eventcalendar
         theme="ios"
         themeVariant="dark"
         renderHeader={() => (
-          <CalendarNavButtons viewType={calendarView.type} changeView={setCalendarView} />
+          <CalendarNavButtons
+            viewType={calendarView.type}
+            changeView={setCalendarView}
+          />
         )}
         view={calendarView.view}
-        data={props.events}
+        data={props.events ?? []}
         clickToCreate={false}
         dragToCreate={false}
         dragToMove={false}
@@ -96,9 +111,9 @@ export const Calendar = (props: CalendarProps) => {
 };
 
 interface CalendarNavButtonsProps {
-  viewType: string;
+  viewType: MbscCalendarViewType;
   changeView: Dispatch<{
-    type: string;
+    type: MbscCalendarViewType;
   }>;
 }
 
@@ -109,7 +124,9 @@ const CalendarNavButtons = (props: CalendarNavButtonsProps) => {
       <div className="cal-header-picker">
         <SegmentedGroup
           value={props.viewType}
-          onChange={(e: any) => props.changeView({ type: e.target.value })}
+          onChange={(e: { target: { value: MbscCalendarViewType } }) =>
+            props.changeView({ type: e.target.value })
+          }
         >
           <SegmentedItem value="month" icon="material-event-note" />
           <SegmentedItem value="week" icon="material-date-range" />

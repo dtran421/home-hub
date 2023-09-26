@@ -2,7 +2,8 @@ import { drizzle } from "drizzle-orm/planetscale-serverless";
 
 import { Client } from "@planetscale/database";
 
-import { env, IS_PROD } from "@/env.mjs";
+import { env } from "@/env.mjs";
+import { IS_PROD } from "@/server/utils";
 
 import * as schema from "./schema";
 

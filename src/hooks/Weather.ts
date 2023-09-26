@@ -4,7 +4,7 @@ import { type WeatherForecast } from "@/types/Weather";
 import { api } from "@/utils/api";
 import { getError } from "@/utils/query";
 
-export const use3DayForecast = (city: string | null | undefined) => {
+export const use3DayForecast = (city: string | null) => {
   const {
     data: forecast,
     isLoading,
@@ -34,7 +34,7 @@ export const use3DayForecast = (city: string | null | undefined) => {
   });
 
   return {
-    forecast: !isErr ? maybeForecast.unwrap() : null,
+    forecast: !isErr ? maybeForecast.unwrap().coalesce() : null,
     isLoading,
     isError: isErr || isError,
     error,

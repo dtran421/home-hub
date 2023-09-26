@@ -9,6 +9,13 @@ export const usersRouter = createTRPCRouter({
   get: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.db.query.users.findFirst({
       where: eq(users.id, ctx.session.user.id),
+      with: {
+        nylasAccounts: {
+          columns: {
+            userId: false,
+          },
+        },
+      },
     });
 
     return ApiResponse(Option(user).coalesce());

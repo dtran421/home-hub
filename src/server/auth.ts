@@ -4,13 +4,14 @@ import {
   getServerSession,
   type NextAuthOptions,
 } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import GoogleProvider, { type GoogleProfile } from "next-auth/providers/google";
 import { mysqlTable } from "drizzle-orm/mysql-core";
 
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 
 import { env } from "@/env.mjs";
 import { db } from "@/server/db";
+import { type UserRole } from "@/types/User";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -19,18 +20,15 @@ import { db } from "@/server/db";
  * @see https://next-auth.js.org/getting-started/typescript#module-augmentation
  */
 declare module "next-auth" {
-  interface Session extends DefaultSession {
-    user: {
-      id: string;
-      // ...other properties
-      // role: UserRole;
-    } & DefaultSession["user"];
+  interface User {
+    id: string;
+    // ...other properties
+    role?: UserRole;
   }
 
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
+  interface Session extends DefaultSession {
+    user: User & DefaultSession["user"];
+  }
 }
 
 /**
@@ -47,10 +45,23 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
+    jwt({ token, user }) {
+      if (!user) {
+        return token;
+      }
+
+      token.role = user.role;
+      return token;
+    },
     session({ session, token }) {
-      if (session.user && token.sub) {
+      if (!session.user || !token) {
+        return session;
+      }
+
+      if (token.sub) {
         session.user.id = token.sub;
       }
+
       return session;
     },
     redirect({ url, baseUrl }) {
@@ -63,7 +74,7 @@ export const authOptions: NextAuthOptions = {
   },
   adapter: DrizzleAdapter(db, mysqlTable),
   providers: [
-    GoogleProvider({
+    GoogleProvider<GoogleProfile>({
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),

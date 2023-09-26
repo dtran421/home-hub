@@ -35,6 +35,8 @@ export const env = createEnv({
     UNSPLASH_SECRET_KEY: z.string().min(1),
 
     WEATHER_ACCESS_KEY: z.string().min(1),
+
+    NYLAS_CLIENT_SECRET: z.string().min(1),
   },
 
   /**
@@ -44,6 +46,7 @@ export const env = createEnv({
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
+    NEXT_PUBLIC_NYLAS_CLIENT_ID: z.string().min(1),
   },
 
   /**
@@ -66,6 +69,10 @@ export const env = createEnv({
     UNSPLASH_SECRET_KEY: process.env.UNSPLASH_SECRET_KEY,
 
     WEATHER_ACCESS_KEY: process.env.WEATHER_ACCESS_KEY,
+
+    NYLAS_CLIENT_SECRET: process.env.NYLAS_CLIENT_SECRET,
+
+    NEXT_PUBLIC_NYLAS_CLIENT_ID: process.env.NEXT_PUBLIC_NYLAS_CLIENT_ID,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
@@ -73,5 +80,3 @@ export const env = createEnv({
    */
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });
-
-export const IS_PROD = env.NODE_ENV === "production";

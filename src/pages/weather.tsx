@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
+import moment from "moment";
 import {
   FiArrowUp,
   FiMinus,
@@ -29,7 +30,7 @@ const Weather = () => {
   const updateUser = useUpdateUser();
 
   const { forecast, isLoading: isLoadingForecast } = use3DayForecast(
-    user?.city,
+    user?.city ?? null,
   );
 
   const [newCity, setNewCity] = useState(user?.city ?? "");
@@ -107,17 +108,7 @@ const WeatherHeader = ({ location }: WeatherHeaderProps) => {
     return null;
   }
 
-  const date = new Date(location.localTime);
-  const day = date.toLocaleDateString("en-us", {
-    weekday: "long",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-  const time = date.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const date = moment(location.localTime);
 
   return (
     <div className="ml-8 mt-10 flex w-full flex-col justify-center">
@@ -125,11 +116,11 @@ const WeatherHeader = ({ location }: WeatherHeaderProps) => {
         {location.name}, {location.region}
       </h1>
       <h2 className="flex items-center">
-        Last updated: {day}
+        Last updated: {date.format("dddd, MMM D, YYYY")}
         <span className="mx-2">
           <FiMinus />
         </span>
-        {time}
+        {date.format("h:mm A")}
       </h2>
     </div>
   );
@@ -145,7 +136,7 @@ const WeatherForecast = ({ forecasts }: WeatherForecastProps) => {
   }
 
   return (
-    <div className="mt-10 flex w-full flex-row justify-center">
+    <div className="mb-40 mt-10 flex w-full flex-1 flex-row items-center justify-center">
       {forecasts.map((day) => (
         <WeatherDay key={day.date} dailyForecast={day} />
       ))}
@@ -160,12 +151,7 @@ interface WeatherDayProps {
 const WeatherDay = ({ dailyForecast }: WeatherDayProps) => {
   const { date: forecastDate, astro } = dailyForecast;
 
-  const date = new Date(forecastDate);
-  const dayOfWeek = date.toLocaleDateString("en-us", { weekday: "long" });
-  const dateOfMonth = date.toLocaleDateString("en-us", {
-    month: "short",
-    day: "numeric",
-  });
+  const date = moment(forecastDate);
 
   const hasPrecipitation =
     dailyForecast.dailyWillItRain || dailyForecast.dailyWillItSnow;
@@ -176,7 +162,7 @@ const WeatherDay = ({ dailyForecast }: WeatherDayProps) => {
   const units = precipitationType === "rain" ? "in" : "cm";
 
   return (
-    <div className="card mx-4 w-72 bg-neutral shadow-xl">
+    <div className="card mx-4 h-1/2 w-72 bg-neutral shadow-xl">
       <figure className="px-8 pt-8">
         <Image
           src={`https:${dailyForecast.condition.icon}`}
@@ -187,8 +173,8 @@ const WeatherDay = ({ dailyForecast }: WeatherDayProps) => {
         />
       </figure>
       <div className="card-title flex-col gap-0">
-        <h2 className="text-2xl">{dayOfWeek}</h2>
-        <h3 className="text-semibold text-xl">{dateOfMonth}</h3>
+        <h2 className="text-2xl">{date.format("dddd")}</h2>
+        <h3 className="text-semibold text-xl">{date.format("MMM D")}</h3>
       </div>
       <div className="mb-4 mt-6">
         <h1 className="mb-1 text-center text-3xl font-semibold">

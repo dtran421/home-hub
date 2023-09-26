@@ -1,13 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { signOut, useSession } from "next-auth/react";
-import {
-  FiCalendar,
-  FiCloud,
-  FiDollarSign,
-  FiHome,
-  FiLogOut,
-} from "react-icons/fi";
+import { FiCalendar, FiCloud, FiHome, FiLogOut, FiWifi } from "react-icons/fi";
 import { cn } from "utils-toolkit";
 
 const LINKS = [
@@ -24,8 +18,8 @@ const LINKS = [
     icon: <FiCalendar />,
   },
   {
-    href: "/financials",
-    icon: <FiDollarSign />,
+    href: "/wifi",
+    icon: <FiWifi />,
   },
 ];
 
@@ -45,21 +39,22 @@ export const NavMenu = () => {
         {LINKS.map((link) => (
           <li
             key={link.href}
-            className={`${
-              activePage === link.href.slice(1) ? "text-accent" : null
-            }`}
+            className={cn("", {
+              "active text-accent": activePage === link.href.slice(1),
+            })}
           >
             <Link href={link.href}>{link.icon}</Link>
           </li>
         ))}
       </ul>
-      <button
-        title="Logout"
-        className={cn("btn btn-square", "rounded-2xl")}
-        onClick={() => void signOut({ callbackUrl: "/" })}
-      >
-        <FiLogOut />
-      </button>
+      <div className="tooltip" data-tip="Logout">
+        <button
+          className={cn("btn btn-square", "rounded-2xl")}
+          onClick={() => void signOut({ callbackUrl: "/" })}
+        >
+          <FiLogOut />
+        </button>
+      </div>
     </div>
   );
 };
