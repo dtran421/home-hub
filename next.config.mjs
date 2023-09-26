@@ -22,8 +22,11 @@ const config = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
         hostname: "cdn.weatherapi.com",
-        port: "",
         pathname: "/weather/64x64/day/**",
       },
     ],

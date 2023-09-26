@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { type AppType } from "next/app";
+import Head from "next/head";
 import { type Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 
@@ -17,14 +18,21 @@ const MyApp: AppType<{ session: Session | null }> = ({
   pageProps: { session, ...pageProps },
 }) => {
   return (
-    <StrictMode>
-      <SessionProvider session={session}>
-        <QueryClientProvider client={queryClient}>
-          <Component {...pageProps} />
-          <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
-      </SessionProvider>
-    </StrictMode>
+    <>
+      <Head>
+        <title>Home Hub</title>
+        <meta name="description" content="Modern digital hub for the home" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <StrictMode>
+        <SessionProvider session={session}>
+          <QueryClientProvider client={queryClient}>
+            <Component {...pageProps} />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </QueryClientProvider>
+        </SessionProvider>
+      </StrictMode>
+    </>
   );
 };
 

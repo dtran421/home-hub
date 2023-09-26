@@ -4,7 +4,9 @@ import {
   getServerSession,
   type NextAuthOptions,
 } from "next-auth";
+import type { Adapter } from "next-auth/adapters";
 import GoogleProvider, { type GoogleProfile } from "next-auth/providers/google";
+import { eq } from "drizzle-orm";
 import { mysqlTable } from "drizzle-orm/mysql-core";
 
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
@@ -12,6 +14,8 @@ import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { env } from "@/env.mjs";
 import { db } from "@/server/db";
 import { type UserRole } from "@/types/User";
+
+import { users } from "./db/schema";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -22,8 +26,7 @@ import { type UserRole } from "@/types/User";
 declare module "next-auth" {
   interface User {
     id: string;
-    // ...other properties
-    role?: UserRole;
+    role: UserRole;
   }
 
   interface Session extends DefaultSession {
@@ -45,34 +48,41 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    jwt({ token, user }) {
-      if (!user) {
-        return token;
-      }
-
-      token.role = user.role;
-      return token;
-    },
-    session({ session, token }) {
+    async session({ session, token }) {
       if (!session.user || !token) {
         return session;
       }
 
       if (token.sub) {
         session.user.id = token.sub;
+
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, token.sub),
+          columns: {
+            role: true,
+          },
+        });
+
+        session.user.role = user?.role ?? "user";
       }
 
       return session;
     },
     redirect({ url, baseUrl }) {
       // Allows relative callback URLs
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`;
+      }
+
       // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url;
+      else if (new URL(url).origin === baseUrl) {
+        return url;
+      }
+
       return baseUrl;
     },
   },
-  adapter: DrizzleAdapter(db, mysqlTable),
+  adapter: DrizzleAdapter(db, mysqlTable) as Adapter,
   providers: [
     GoogleProvider<GoogleProfile>({
       clientId: env.GOOGLE_CLIENT_ID,

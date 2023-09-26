@@ -19,7 +19,7 @@ export const useGetUnsplashImage = () => {
 
   const {
     data,
-    isLoading,
+    isFetching,
     isError,
     error: queryError,
   } = api.unsplash.getRandomImage.useQuery(DEFAULT_PARAMS, {
@@ -51,7 +51,7 @@ export const useGetUnsplashImage = () => {
 
   return {
     img: !isErr ? maybeImg.unwrap().coalesce() : null,
-    isLoading,
+    isFetching,
     isError: isErr || isError,
     error,
     refresh,

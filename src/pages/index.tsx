@@ -1,11 +1,10 @@
-import { type FormEvent, type ReactNode, useEffect, useState } from "react";
-import Head from "next/head";
+import { type FormEvent, useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import { type Session } from "next-auth";
 import { signIn, useSession } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
 import { FiEdit2, FiRefreshCw } from "react-icons/fi";
-import { cn } from "utils-toolkit";
 
 import { ErrorAlert } from "@/components/Alerts/ErrorAlert";
 import { WarningAlert } from "@/components/Alerts/WarningAlert";
@@ -34,7 +33,12 @@ const getHeaderText = (
   return "Sign in to get started";
 };
 
-const Home = () => {
+interface MainPageProps {
+  refreshBg: () => void;
+  isRefreshingBg: boolean;
+}
+
+const MainPage = ({ refreshBg, isRefreshingBg }: MainPageProps) => {
   const router = useRouter();
   const { data: session, status: sessionStatus } = useSession({
     required: false,
@@ -42,6 +46,7 @@ const Home = () => {
 
   const {
     user,
+    isFetched: isUserFetched,
     isLoading: isLoadingUser,
     isError,
     error,
@@ -64,13 +69,6 @@ const Home = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const [refreshBg, toggleRefreshBg] = useState(false);
-  useEffect(() => {
-    if (refreshBg) {
-      toggleRefreshBg(false);
-    }
-  }, [refreshBg]);
-
   const [customError, setCustomError] = useState("");
   useEffect(() => {
     if (customError) {
@@ -89,125 +87,109 @@ const Home = () => {
   const signInCallbackUrl = router.query.callbackUrl as string | undefined;
 
   const loadingUser =
-    sessionStatus === "loading" || isLoadingUser || updateUser.isLoading;
+    sessionStatus === "loading" ||
+    (isUserFetched && isLoadingUser) ||
+    updateUser.isLoading;
   const headerText = getHeaderText(session, user, loadingUser);
 
   return (
     <>
-      <Head>
-        <title>Home Hub</title>
-        <meta name="description" content="Modern digital hub for the home" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <BackgroundContainer refreshBg={refreshBg}>
-        <div className="indicator">
-          {!!user?.name && (
+      <div className="indicator">
+        {!!user?.name && (
+          <button
+            className="badge indicator-item badge-secondary"
+            onClick={() => toggleShowEditor(!showEditor)}
+          >
+            <FiEdit2 />
+          </button>
+        )}
+        <div className="flex flex-col items-center space-y-8 rounded-md bg-neutral/30 px-8 py-6 backdrop-blur-sm">
+          {loadingUser ? (
+            <span className="loading loading-bars loading-md text-accent" />
+          ) : (
+            <h1 className="text-center font-mono text-2xl font-bold text-gray-100">
+              {headerText}
+            </h1>
+          )}
+          {!loadingUser && !session && (
             <button
-              className="badge indicator-item badge-secondary"
-              onClick={() => toggleShowEditor(!showEditor)}
+              className="btn btn-neutral btn-wide"
+              onClick={() =>
+                void signIn("google", {
+                  callbackUrl: signInCallbackUrl ?? "/",
+                })
+              }
             >
-              <FiEdit2 />
+              <FcGoogle size={20} /> Sign in with Google
             </button>
           )}
-          <div className="flex flex-col items-center space-y-8 rounded-md bg-neutral/30 px-8 py-6 backdrop-blur-sm">
-            {loadingUser ? (
-              <span className="loading loading-bars loading-md text-accent" />
-            ) : (
-              <h1 className="text-center font-mono text-2xl font-bold text-gray-100">
-                {headerText}
-              </h1>
-            )}
-            {!loadingUser && !session && (
-              <button
-                className="btn btn-neutral btn-wide"
-                onClick={() =>
-                  void signIn("google", {
-                    callbackUrl: signInCallbackUrl ?? "/",
-                  })
-                }
-              >
-                <FcGoogle size={20} /> Sign in with Google
-              </button>
-            )}
-            {!loadingUser && showEditor && (
-              <form onSubmit={submitHandler}>
-                <input
-                  type="text"
-                  placeholder="Tony Stark"
-                  className="input input-bordered input-primary w-full max-w-xs text-center"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-                {updateUser.isLoading && (
-                  <span className="loading loading-spinner loading-md text-accent" />
-                )}
-              </form>
-            )}
-            {!loadingUser && user?.name ? (
-              <h2 className="text-center font-mono text-6xl font-bold text-white">
-                {time.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </h2>
-            ) : null}
-          </div>
+          {!loadingUser && showEditor && (
+            <form onSubmit={submitHandler}>
+              <input
+                type="text"
+                placeholder="Tony Stark"
+                className="input input-bordered input-primary w-full max-w-xs text-center"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              {updateUser.isLoading && (
+                <span className="loading loading-spinner loading-md text-accent" />
+              )}
+            </form>
+          )}
+          {!loadingUser && user?.name ? (
+            <h2 className="text-center font-mono text-6xl font-bold text-white">
+              {time.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </h2>
+          ) : null}
         </div>
-        <div className="absolute bottom-4 right-4">
-          <button
-            className="btn btn-circle text-accent"
-            onClick={() => {
-              if (!user) {
-                setCustomError("Please sign in to refresh the background");
-                return;
-              }
-              toggleRefreshBg(true);
-            }}
-          >
-            <FiRefreshCw size={20} />
-          </button>
-        </div>
-        <NavMenu />
-        {isError && <ErrorAlert message={error?.message} />}
-        {customError && (
-          <WarningAlert
-            message={customError}
-            onClose={() => {
-              setCustomError("");
-            }}
-          />
-        )}
-      </BackgroundContainer>
+      </div>
+      <div className="absolute bottom-4 right-4">
+        <button
+          className="btn btn-circle text-accent"
+          onClick={() => {
+            if (!user) {
+              setCustomError("Please sign in to refresh the background");
+              return;
+            }
+            refreshBg();
+          }}
+          disabled={isRefreshingBg}
+        >
+          <FiRefreshCw size={20} />
+        </button>
+      </div>
+      <NavMenu />
+      {isError && <ErrorAlert message={error?.message} />}
+      {customError && (
+        <WarningAlert
+          message={customError}
+          onClose={() => {
+            setCustomError("");
+          }}
+        />
+      )}
     </>
   );
 };
 
-interface BackgroundContainerProps {
-  refreshBg: boolean;
-  children: ReactNode;
-}
-
-const BackgroundContainer = (props: BackgroundContainerProps) => {
-  const { img, isError, error, refresh } = useGetUnsplashImage();
-
-  if (props.refreshBg) {
-    refresh();
-  }
+const Home = () => {
+  const { img, isFetching, isError, error, refresh } = useGetUnsplashImage();
 
   return (
-    <main
-      className={cn(
-        "flex h-screen w-full flex-col items-center justify-center bg-base-100 p-4",
-        {
-          "bg-cover bg-center": !!img,
-        },
+    <main className="flex h-screen w-full flex-col items-center justify-center bg-base-100 p-4">
+      {img && (
+        <figure className="fixed h-full w-full">
+          <Image alt="unsplash bg image" src={img.urls.full} fill priority />
+        </figure>
       )}
-      style={{
-        backgroundImage: `url(${img?.urls.full})`,
-      }}
-    >
-      {props.children}
-      {isError && <ErrorAlert message={error?.message} />}
+      <div className="z-10">
+        <MainPage refreshBg={refresh} isRefreshingBg={isFetching} />
+        {isError && <ErrorAlert message={error?.message} />}
+      </div>
     </main>
   );
 };

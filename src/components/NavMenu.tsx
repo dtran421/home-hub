@@ -1,31 +1,39 @@
+import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { signOut, useSession } from "next-auth/react";
 import { FiCalendar, FiCloud, FiHome, FiLogOut, FiWifi } from "react-icons/fi";
 import { cn } from "utils-toolkit";
 
-const LINKS = [
-  {
-    href: "/",
-    icon: <FiHome />,
-  },
-  {
-    href: "/weather",
-    icon: <FiCloud />,
-  },
-  {
-    href: "/calendar",
-    icon: <FiCalendar />,
-  },
-  {
-    href: "/wifi",
-    icon: <FiWifi />,
-  },
-];
-
 export const NavMenu = () => {
   const session = useSession();
   const router = useRouter();
+
+  const LINKS = useMemo(() => {
+    const links = [
+      {
+        href: "/",
+        icon: <FiHome />,
+      },
+      {
+        href: "/weather",
+        icon: <FiCloud />,
+      },
+      {
+        href: "/calendar",
+        icon: <FiCalendar />,
+      },
+    ];
+
+    if (session.data?.user.role === "admin") {
+      links.push({
+        href: "/wifi",
+        icon: <FiWifi />,
+      });
+    }
+
+    return links;
+  }, [session.data?.user.role]);
 
   if (!session.data?.user) {
     return null;

@@ -10,10 +10,12 @@ import { generateQueryKey, getError } from "@/utils/query";
 export const useGetUser = (session: Session | null) => {
   const {
     data,
+    isFetched,
     isLoading,
     isError,
     error: queryError,
   } = api.users.get.useQuery(undefined, {
+    refetchOnWindowFocus: false,
     retry: false,
     enabled: !!session?.user?.id,
   });
@@ -31,6 +33,7 @@ export const useGetUser = (session: Session | null) => {
 
   return {
     user: !isErr ? maybeUser.unwrap().coalesce() : null,
+    isFetched,
     isLoading,
     isError: isErr || isError,
     error,
