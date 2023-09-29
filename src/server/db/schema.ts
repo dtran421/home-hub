@@ -73,17 +73,38 @@ export const nylasAccounts = mysqlTable(
   "nylasAccount",
   {
     userId: varchar("userId", { length: 255 }).notNull(),
+    accountId: varchar("accountId", { length: 255 }).notNull().primaryKey(),
     provider: mysqlEnum("provider", NylasAuthProvider).notNull(),
     accessToken: text("accessToken").notNull(),
   },
   (account) => ({
-    compoundKey: primaryKey(account.provider, account.userId),
     userIdIdx: index("userId_idx").on(account.userId),
   }),
 );
 
-export const nylasAccountsRelations = relations(nylasAccounts, ({ one }) => ({
-  user: one(users, { fields: [nylasAccounts.userId], references: [users.id] }),
+export const nylasAccountsRelations = relations(
+  nylasAccounts,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [nylasAccounts.userId],
+      references: [users.id],
+    }),
+    nylasCalendars: many(nylasCalendars),
+  }),
+);
+
+export const nylasCalendars = mysqlTable("nylasCalendar", {
+  accountId: varchar("accountId", { length: 255 }).notNull(),
+  calendarId: varchar("calendarId", { length: 255 }).primaryKey().notNull(),
+  provider: mysqlEnum("provider", NylasAuthProvider).notNull(),
+  active: int("active").notNull().default(1),
+});
+
+export const nylasCalendarsRelations = relations(nylasCalendars, ({ one }) => ({
+  nylasAccounts: one(nylasAccounts, {
+    fields: [nylasCalendars.accountId],
+    references: [nylasAccounts.accountId],
+  }),
 }));
 
 export const sessions = mysqlTable(

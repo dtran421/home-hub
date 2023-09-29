@@ -31,7 +31,7 @@ const getCalendarView = (view: MbscCalendarViewType): MbscEventcalendarView => {
   switch (view) {
     case "month":
       return {
-        calendar: { type: "month" },
+        calendar: { type: "month", labels: 4 },
       };
     case "week":
       return {
@@ -45,6 +45,16 @@ const getCalendarView = (view: MbscCalendarViewType): MbscEventcalendarView => {
     default:
       throw new Error("Invalid view");
   }
+};
+
+const viewReducer = (
+  _state: CalendarView,
+  action: { type: MbscCalendarViewType },
+) => {
+  return {
+    type: action.type,
+    view: getCalendarView(action.type),
+  };
 };
 
 interface CalendarView {
@@ -69,16 +79,6 @@ export const Calendar = (props: CalendarProps) => {
     setToastText(event.event.title ?? "");
     setToastOpen(true);
   }, []);
-
-  const viewReducer = (
-    _state: CalendarView,
-    action: { type: MbscCalendarViewType },
-  ) => {
-    return {
-      type: action.type,
-      view: getCalendarView(action.type),
-    };
-  };
 
   const [calendarView, setCalendarView] = useReducer(viewReducer, {
     type: "month",
@@ -110,6 +110,12 @@ export const Calendar = (props: CalendarProps) => {
   );
 };
 
+interface MysteriousMbscCalendarViewEvent {
+  target: {
+    value: MbscCalendarViewType;
+  };
+}
+
 interface CalendarNavButtonsProps {
   viewType: MbscCalendarViewType;
   changeView: Dispatch<{
@@ -124,7 +130,7 @@ const CalendarNavButtons = (props: CalendarNavButtonsProps) => {
       <div className="cal-header-picker">
         <SegmentedGroup
           value={props.viewType}
-          onChange={(e: { target: { value: MbscCalendarViewType } }) =>
+          onChange={(e: MysteriousMbscCalendarViewEvent) =>
             props.changeView({ type: e.target.value })
           }
         >

@@ -14,6 +14,37 @@ export type NylasObject =
   | "message"
   | "label";
 
+export type Metadata = Record<string, unknown>;
+export interface CalendarJSON {
+  name: string;
+  description: string | null;
+  location: string | null;
+  timezone: string | null;
+  id: string;
+  account_id: string;
+  object: "calendar";
+  read_only: boolean;
+  is_primary?: boolean | null;
+  hex_color: string | null;
+  metadata?: Metadata;
+}
+
+export type CalendarsJSON = CalendarJSON[];
+
+export type Calendar = Pick<
+  CalendarJSON,
+  "name" | "description" | "location" | "timezone" | "id" | "object"
+> & {
+  provider: (typeof NylasAuthProvider)[number];
+  accountId: string;
+  readOnly: boolean;
+  isPrimary?: boolean | null;
+  hexColor?: string | null;
+  active: boolean;
+};
+
+export type Calendars = Calendar[];
+
 export type ParticipantEventStatus = "yes" | "no" | "maybe" | "noreply";
 
 export interface Participant {
@@ -107,8 +138,6 @@ export type CalendarEventStatus = "confirmed" | "tentative" | "cancelled";
 
 export type EventVisibility = "private" | "public" | "normal";
 
-export type Metadata = Record<string, unknown>;
-
 export interface EventJSON {
   account_id: string;
   busy: boolean;
@@ -120,7 +149,7 @@ export interface EventJSON {
   location?: string;
   message_id: string;
   metadata?: Metadata;
-  object: NylasObject;
+  object: "event";
   owner: string;
   participants: Participant[];
   read_only: boolean;

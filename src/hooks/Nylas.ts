@@ -5,23 +5,9 @@ import { type MbscCalendarEvent } from "@mobiscroll/react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { type TRPCRouterLike } from "@/server/api/root";
-import { type Events } from "@/types/Nylas";
+import { type Calendar, type Calendars, type Events } from "@/types/Nylas";
 import { api } from "@/utils/api";
 import { generateQueryKey, getError } from "@/utils/query";
-
-/* export const useGetCalendars = () => {
-  const getCalendars = async () => await GetCalendars("icloud");
-  const { data, isLoading } = useQuery(["calendars"], getCalendars, {
-    refetchOnWindowFocus: false,
-    retry: 1,
-    staleTime: 1000 * 60 * 15, // 15 minutes
-  });
-
-  return {
-    calendars: data?.calendars,
-    isLoading,
-  };
-};*/
 
 export const useUpsertNylasAccount = () => {
   const queryClient = useQueryClient();
@@ -31,6 +17,176 @@ export const useUpsertNylasAccount = () => {
       onSuccess: () => {
         void queryClient.invalidateQueries(
           // TODO: this typing needs to be fixed lol
+          generateQueryKey(api.nylas.getCalendars as unknown as TRPCRouterLike),
+        );
+        void queryClient.invalidateQueries(
+          // TODO: this typing needs to be fixed lol
+          generateQueryKey(api.nylas.getEvents as unknown as TRPCRouterLike),
+        );
+      },
+    });
+
+  return {
+    mutate,
+    isLoading,
+    isSuccess,
+    isError,
+    error,
+  };
+};
+
+export type CalendarType = "All" | "Tasks";
+
+const getCalendarType = (calendar: Calendar): CalendarType =>
+  calendar.description === "Task Calendar" ? "Tasks" : "All";
+
+const postProcessCalendars = (
+  calendars: Calendars,
+): Record<CalendarType, Calendars> | null =>
+  !calendars.length
+    ? null
+    : calendars
+        .filter((calendar) => !calendar.name.includes("⚠️"))
+        .sort((a, b) => {
+          if (a.isPrimary && !b.isPrimary) {
+            return -1;
+          }
+
+          if (!a.isPrimary && b.isPrimary) {
+            return 1;
+          }
+
+          if (a.name < b.name) {
+            return -1;
+          }
+
+          if (a.name > b.name) {
+            return 1;
+          }
+
+          return 0;
+        })
+        .reduce(
+          (map, calendar) => {
+            const key = getCalendarType(calendar);
+            return {
+              ...map,
+              [key]: [...(map[key] ?? []), calendar],
+            };
+          },
+          {} as Record<CalendarType, Calendars>,
+        );
+
+export const useGetCalendars = () => {
+  const {
+    data: calendars,
+    isLoading,
+    isError,
+    error: queryError,
+  } = api.nylas.getCalendars.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+    retry: 1,
+    staleTime: 1000 * 60 * 15, // 15 minutes
+  });
+
+  const apiResponse = Option(calendars).coalesce(ApiResponse<Calendars>(null));
+  const maybeCalendars = consumeApiResponse(apiResponse);
+  const isErr = !maybeCalendars.ok;
+
+  const error = getError({
+    isServerError: isErr,
+    isUncaughtError: isError,
+    responseError: isErr ? maybeCalendars.unwrap() : null,
+    uncaughtError: queryError,
+  });
+
+  return {
+    calendars: !isErr
+      ? postProcessCalendars(maybeCalendars.unwrap().coalesce([])!)
+      : null,
+    isLoading,
+    isError: isErr || isError,
+    error,
+  };
+};
+
+const updateCalendarData = (
+  oldData: ApiResponse<Calendars> | undefined,
+  newCalendar: Calendar | null,
+) => {
+  const oldApiResponse = consumeApiResponse(
+    Option(oldData).coalesce(ApiResponse<Calendars>(null)),
+  );
+  if (!oldApiResponse.ok) {
+    return oldData;
+  }
+
+  const data = oldApiResponse.unwrap().coalesce([]);
+
+  return ApiResponse<Calendars>(
+    data.map((calendar) => {
+      if (calendar.id === newCalendar?.id) {
+        return newCalendar;
+      }
+      return calendar;
+    }),
+  );
+};
+
+export const useUpdateCalendar = () => {
+  const queryClient = useQueryClient();
+
+  const { queryKey: getCalendarsQueryKey } = generateQueryKey(
+    api.nylas.getCalendars as unknown as TRPCRouterLike,
+  );
+
+  const { mutate, isLoading, isSuccess, isError, error } =
+    api.nylas.updateCalendar.useMutation({
+      onMutate: (newCalendar: Calendar) => {
+        const previousCalendars =
+          queryClient.getQueryData(getCalendarsQueryKey);
+
+        queryClient.setQueryData(
+          getCalendarsQueryKey,
+          (previousCalendars: ApiResponse<Calendars> | undefined) =>
+            updateCalendarData(previousCalendars, newCalendar),
+        );
+
+        return { previousCalendars };
+      },
+      onError: (err, _newCalendar, context) => {
+        console.error(
+          `Something went wrong with the calendar update: ${err.message}`,
+        );
+        queryClient.setQueryData(
+          getCalendarsQueryKey,
+          context?.previousCalendars,
+        );
+      },
+      onSettled: (data: ApiResponse<Calendar | null> | undefined, error) => {
+        const apiResponse = Option(data).coalesce(ApiResponse<Calendar>(null));
+        const calendarResult = consumeApiResponse(apiResponse);
+        const isErr = !calendarResult.ok;
+
+        if (error ?? isErr) {
+          return;
+        }
+
+        const maybeCalendar = calendarResult.unwrap();
+        if (!maybeCalendar.some) {
+          console.error("Something went wrong with the calendar update");
+          return;
+        }
+
+        const newCalendar = maybeCalendar.coalesce();
+
+        queryClient.setQueryData<typeof updateCalendarData>(
+          getCalendarsQueryKey,
+          (previousCalendars: ApiResponse<Calendars> | undefined) =>
+            updateCalendarData(previousCalendars, newCalendar),
+        );
+
+        void queryClient.invalidateQueries(
           generateQueryKey(api.nylas.getEvents as unknown as TRPCRouterLike),
         );
       },
