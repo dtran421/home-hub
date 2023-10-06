@@ -9,6 +9,7 @@ import { createTRPCRouter } from "@/server/api/trpc";
 
 import { IS_PROD } from "../utils";
 
+import { googleRouter } from "./routers/google";
 import { nylasRouter } from "./routers/nylas";
 import { usersRouter } from "./routers/users";
 import { weatherRouter } from "./routers/weather";
@@ -75,6 +76,7 @@ export const appRouter = createTRPCRouter({
   users: usersRouter,
   weather: weatherRouter,
   nylas: nylasRouter,
+  google: googleRouter,
 });
 
 // export type definition of API

@@ -6,12 +6,12 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { nylasAccounts, nylasCalendars } from "@/server/db/schema";
 import {
-  type Calendar,
-  type Calendars,
-  type CalendarsJSON,
-  type Events,
-  type EventsJSON,
   NylasAuthProvider,
+  type NylasCalendar,
+  type NylasCalendars,
+  type NylasCalendarsJSON,
+  type NylasEvents,
+  type NylasEventsJSON,
 } from "@/types/Nylas";
 import { NYLAS_BASE_URL } from "@/utils/common";
 
@@ -41,8 +41,8 @@ const upsertAccount = protectedProcedure
 
 const processCalendarResponse = (
   provider: (typeof NylasAuthProvider)[number],
-  data: CalendarsJSON,
-): Omit<Calendar, "active">[] =>
+  data: NylasCalendarsJSON,
+): Omit<NylasCalendar, "active">[] =>
   data.map((calendar) => ({
     provider,
     name: calendar.name,
@@ -88,7 +88,7 @@ const getCalendars = protectedProcedure.query(async ({ ctx }) => {
 
   try {
     const calendarsPromises = userNylasAccounts.map(async (account) => {
-      const { data } = await axios.get<CalendarsJSON>(
+      const { data } = await axios.get<NylasCalendarsJSON>(
         `${NYLAS_BASE_URL}${endpoint}`,
         {
           headers: {
@@ -116,7 +116,7 @@ const getCalendars = protectedProcedure.query(async ({ ctx }) => {
       await ctx.db.insert(nylasCalendars).values(calendarsToInsert);
     }
 
-    return ApiResponse<Calendars>(
+    return ApiResponse<NylasCalendars>(
       calendars.map((cal) => ({
         ...cal,
         active: existingCalendarMap[cal.id] ?? true,
@@ -124,7 +124,7 @@ const getCalendars = protectedProcedure.query(async ({ ctx }) => {
     );
   } catch (error) {
     if (!(error instanceof Error)) {
-      return ApiResponse<Calendars>(new Error("500 Internal Error"));
+      return ApiResponse<NylasCalendars>(new Error("500 Internal Error"));
     }
 
     if (axios.isAxiosError(error)) {
@@ -132,7 +132,7 @@ const getCalendars = protectedProcedure.query(async ({ ctx }) => {
     } else {
       console.error("Something went wrong: ", error.message);
     }
-    return ApiResponse<Calendars>(error);
+    return ApiResponse<NylasCalendars>(error);
   }
 });
 
@@ -160,7 +160,7 @@ const updateCalendar = protectedProcedure
       where: eq(nylasCalendars.calendarId, id),
     });
     if (!calendar) {
-      return ApiResponse<Calendar>(new Error("404 Calendar not found"));
+      return ApiResponse<NylasCalendar>(new Error("404 Calendar not found"));
     }
 
     await ctx.db
@@ -170,13 +170,13 @@ const updateCalendar = protectedProcedure
 
     console.info(`Successfully updated calendar ${id}`);
 
-    return ApiResponse<Calendar>({
+    return ApiResponse<NylasCalendar>({
       ...input,
       active,
     });
   });
 
-const processEventResponse = (data: EventsJSON): Events =>
+const processEventResponse = (data: NylasEventsJSON): NylasEvents =>
   data.map((event) => {
     const formattedEvent = {
       id: event.id,
@@ -243,7 +243,7 @@ const getEvents = protectedProcedure.query(async ({ ctx }) => {
 
   try {
     const eventsPromises = nylasAccessTokens.map(async (accessToken) => {
-      const { data } = await axios.get<EventsJSON>(
+      const { data } = await axios.get<NylasEventsJSON>(
         `${NYLAS_BASE_URL}${endpoint}`,
         {
           headers: {
@@ -257,10 +257,10 @@ const getEvents = protectedProcedure.query(async ({ ctx }) => {
     });
 
     const events = await Promise.all(eventsPromises);
-    return ApiResponse<Events>(events.flat());
+    return ApiResponse<NylasEvents>(events.flat());
   } catch (error) {
     if (!(error instanceof Error)) {
-      return ApiResponse<Events>(new Error("500 Internal Error"));
+      return ApiResponse<NylasEvents>(new Error("500 Internal Error"));
     }
 
     if (axios.isAxiosError(error)) {
@@ -268,7 +268,7 @@ const getEvents = protectedProcedure.query(async ({ ctx }) => {
     } else {
       console.error("Something went wrong: ", error.message);
     }
-    return ApiResponse<Events>(error);
+    return ApiResponse<NylasEvents>(error);
   }
 });
 

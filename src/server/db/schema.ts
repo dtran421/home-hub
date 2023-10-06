@@ -40,6 +40,7 @@ export type NewUser = typeof users.$inferInsert;
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   nylasAccounts: many(nylasAccounts),
+  googleCalendars: many(googleCalendars),
 }));
 
 export const accounts = mysqlTable(
@@ -107,32 +108,24 @@ export const nylasCalendarsRelations = relations(nylasCalendars, ({ one }) => ({
   }),
 }));
 
-export const sessions = mysqlTable(
-  "session",
+export const googleCalendars = mysqlTable(
+  "googleCalendar",
   {
-    sessionToken: varchar("sessionToken", { length: 255 })
-      .notNull()
-      .primaryKey(),
     userId: varchar("userId", { length: 255 }).notNull(),
-    expires: timestamp("expires", { mode: "date" }).notNull(),
+    calendarId: varchar("calendarId", { length: 255 }).primaryKey().notNull(),
+    active: int("active").notNull().default(1),
   },
-  (session) => ({
-    userIdIdx: index("userId_idx").on(session.userId),
+  (calendar) => ({
+    userIdIdx: index("userId_idx").on(calendar.userId),
   }),
 );
 
-export const sessionsRelations = relations(sessions, ({ one }) => ({
-  user: one(users, { fields: [sessions.userId], references: [users.id] }),
-}));
-
-export const verificationTokens = mysqlTable(
-  "verificationToken",
-  {
-    identifier: varchar("identifier", { length: 255 }).notNull(),
-    token: varchar("token", { length: 255 }).notNull(),
-    expires: timestamp("expires", { mode: "date" }).notNull(),
-  },
-  (vt) => ({
-    compoundKey: primaryKey(vt.identifier, vt.token),
+export const googleCalendarsRelations = relations(
+  googleCalendars,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [googleCalendars.userId],
+      references: [users.id],
+    }),
   }),
 );

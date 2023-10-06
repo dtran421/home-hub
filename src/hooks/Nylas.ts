@@ -1,11 +1,16 @@
 import moment from "moment";
 import { ApiResponse, consumeApiResponse, Option } from "utils-toolkit";
 
-import { type MbscCalendarEvent } from "@mobiscroll/react";
+import { type EventInput } from "@fullcalendar/core";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { type TRPCRouterLike } from "@/server/api/root";
-import { type Calendar, type Calendars, type Events } from "@/types/Nylas";
+import { type User } from "@/server/db/schema";
+import {
+  type NylasCalendar,
+  type NylasCalendars,
+  type NylasEvents,
+} from "@/types/Nylas";
 import { api } from "@/utils/api";
 import { generateQueryKey, getError } from "@/utils/query";
 
@@ -35,61 +40,22 @@ export const useUpsertNylasAccount = () => {
   };
 };
 
-export type CalendarType = "All" | "Tasks";
-
-const getCalendarType = (calendar: Calendar): CalendarType =>
-  calendar.description === "Task Calendar" ? "Tasks" : "All";
-
-const postProcessCalendars = (
-  calendars: Calendars,
-): Record<CalendarType, Calendars> | null =>
-  !calendars.length
-    ? null
-    : calendars
-        .filter((calendar) => !calendar.name.includes("⚠️"))
-        .sort((a, b) => {
-          if (a.isPrimary && !b.isPrimary) {
-            return -1;
-          }
-
-          if (!a.isPrimary && b.isPrimary) {
-            return 1;
-          }
-
-          if (a.name < b.name) {
-            return -1;
-          }
-
-          if (a.name > b.name) {
-            return 1;
-          }
-
-          return 0;
-        })
-        .reduce(
-          (map, calendar) => {
-            const key = getCalendarType(calendar);
-            return {
-              ...map,
-              [key]: [...(map[key] ?? []), calendar],
-            };
-          },
-          {} as Record<CalendarType, Calendars>,
-        );
-
-export const useGetCalendars = () => {
+export const useGetNylasCalendars = (user: User | null) => {
   const {
     data: calendars,
     isLoading,
     isError,
     error: queryError,
   } = api.nylas.getCalendars.useQuery(undefined, {
+    enabled: !!user,
     refetchOnWindowFocus: false,
     retry: 1,
     staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
-  const apiResponse = Option(calendars).coalesce(ApiResponse<Calendars>(null));
+  const apiResponse = Option<ApiResponse<NylasCalendars>>(calendars).coalesce(
+    ApiResponse<NylasCalendars>(null),
+  );
   const maybeCalendars = consumeApiResponse(apiResponse);
   const isErr = !maybeCalendars.ok;
 
@@ -101,9 +67,7 @@ export const useGetCalendars = () => {
   });
 
   return {
-    calendars: !isErr
-      ? postProcessCalendars(maybeCalendars.unwrap().coalesce([])!)
-      : null,
+    calendars: !isErr ? maybeCalendars.unwrap().coalesce([]) : null,
     isLoading,
     isError: isErr || isError,
     error,
@@ -111,11 +75,11 @@ export const useGetCalendars = () => {
 };
 
 const updateCalendarData = (
-  oldData: ApiResponse<Calendars> | undefined,
-  newCalendar: Calendar | null,
+  oldData: ApiResponse<NylasCalendars> | undefined,
+  newCalendar: NylasCalendar | null,
 ) => {
   const oldApiResponse = consumeApiResponse(
-    Option(oldData).coalesce(ApiResponse<Calendars>(null)),
+    Option(oldData).coalesce(ApiResponse<NylasCalendars>(null)),
   );
   if (!oldApiResponse.ok) {
     return oldData;
@@ -123,7 +87,7 @@ const updateCalendarData = (
 
   const data = oldApiResponse.unwrap().coalesce([]);
 
-  return ApiResponse<Calendars>(
+  return ApiResponse<NylasCalendars>(
     data.map((calendar) => {
       if (calendar.id === newCalendar?.id) {
         return newCalendar;
@@ -133,7 +97,7 @@ const updateCalendarData = (
   );
 };
 
-export const useUpdateCalendar = () => {
+export const useUpdateNylasCalendar = () => {
   const queryClient = useQueryClient();
 
   const { queryKey: getCalendarsQueryKey } = generateQueryKey(
@@ -142,13 +106,13 @@ export const useUpdateCalendar = () => {
 
   const { mutate, isLoading, isSuccess, isError, error } =
     api.nylas.updateCalendar.useMutation({
-      onMutate: (newCalendar: Calendar) => {
+      onMutate: (newCalendar: NylasCalendar) => {
         const previousCalendars =
           queryClient.getQueryData(getCalendarsQueryKey);
 
         queryClient.setQueryData(
           getCalendarsQueryKey,
-          (previousCalendars: ApiResponse<Calendars> | undefined) =>
+          (previousCalendars: ApiResponse<NylasCalendars> | undefined) =>
             updateCalendarData(previousCalendars, newCalendar),
         );
 
@@ -163,8 +127,13 @@ export const useUpdateCalendar = () => {
           context?.previousCalendars,
         );
       },
-      onSettled: (data: ApiResponse<Calendar | null> | undefined, error) => {
-        const apiResponse = Option(data).coalesce(ApiResponse<Calendar>(null));
+      onSettled: (
+        data: ApiResponse<NylasCalendar | null> | undefined,
+        error,
+      ) => {
+        const apiResponse = Option(data).coalesce(
+          ApiResponse<NylasCalendar>(null),
+        );
         const calendarResult = consumeApiResponse(apiResponse);
         const isErr = !calendarResult.ok;
 
@@ -182,7 +151,7 @@ export const useUpdateCalendar = () => {
 
         queryClient.setQueryData<typeof updateCalendarData>(
           getCalendarsQueryKey,
-          (previousCalendars: ApiResponse<Calendars> | undefined) =>
+          (previousCalendars: ApiResponse<NylasCalendars> | undefined) =>
             updateCalendarData(previousCalendars, newCalendar),
         );
 
@@ -201,7 +170,7 @@ export const useUpdateCalendar = () => {
   };
 };
 
-const formatEvents = (events: Events): MbscCalendarEvent[] =>
+const formatEvents = (events: NylasEvents): EventInput[] =>
   events.map((event) => {
     const mbscEvent = {
       id: event.id,
@@ -244,19 +213,22 @@ const formatEvents = (events: Events): MbscCalendarEvent[] =>
     }
   });
 
-export const useGetEvents = () => {
+export const useGetEvents = (user: User | null) => {
   const {
     data: events,
     isLoading,
     isError,
     error: queryError,
   } = api.nylas.getEvents.useQuery(undefined, {
+    enabled: !!user,
     refetchOnWindowFocus: false,
     retry: 1,
     staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
-  const apiResponse = Option(events).coalesce(ApiResponse<Events>(null));
+  const apiResponse = Option<ApiResponse<NylasEvents>>(events).coalesce(
+    ApiResponse<NylasEvents>(null),
+  );
   const maybeEvents = consumeApiResponse(apiResponse);
   const isErr = !maybeEvents.ok;
 

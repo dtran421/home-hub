@@ -6,6 +6,33 @@ export const NylasAuthProvider = [
   "IMAP",
 ] as const;
 
+export const NylasAuthProviderString = [
+  "iCloud",
+  "Gmail",
+  "Office365",
+  "Exchange",
+  "IMAP",
+] as const;
+
+// TODO: make this return a Result
+export const getNylasAuthProvider = (
+  provider: (typeof NylasAuthProvider)[number],
+): (typeof NylasAuthProviderString)[number] => {
+  switch (provider) {
+    case "icloud":
+      return "iCloud";
+    case "IMAP":
+      return "IMAP";
+    case "gmail":
+    case "office365":
+    case "exchange":
+      return (provider.charAt(0).toUpperCase() +
+        provider.slice(1)) as (typeof NylasAuthProviderString)[number];
+    default:
+      throw new Error(`Invalid NylasAuthProvider: ${provider as string}`);
+  }
+};
+
 export type NylasObject =
   | "event"
   | "calendar"
@@ -15,7 +42,7 @@ export type NylasObject =
   | "label";
 
 export type Metadata = Record<string, unknown>;
-export interface CalendarJSON {
+export interface NylasCalendarJSON {
   name: string;
   description: string | null;
   location: string | null;
@@ -29,10 +56,10 @@ export interface CalendarJSON {
   metadata?: Metadata;
 }
 
-export type CalendarsJSON = CalendarJSON[];
+export type NylasCalendarsJSON = NylasCalendarJSON[];
 
-export type Calendar = Pick<
-  CalendarJSON,
+export type NylasCalendar = Pick<
+  NylasCalendarJSON,
   "name" | "description" | "location" | "timezone" | "id" | "object"
 > & {
   provider: (typeof NylasAuthProvider)[number];
@@ -43,7 +70,7 @@ export type Calendar = Pick<
   active: boolean;
 };
 
-export type Calendars = Calendar[];
+export type NylasCalendars = NylasCalendar[];
 
 export type ParticipantEventStatus = "yes" | "no" | "maybe" | "noreply";
 
@@ -138,7 +165,7 @@ export type CalendarEventStatus = "confirmed" | "tentative" | "cancelled";
 
 export type EventVisibility = "private" | "public" | "normal";
 
-export interface EventJSON {
+export interface NylasEventJSON {
   account_id: string;
   busy: boolean;
   calendar_id: string;
@@ -170,10 +197,10 @@ export interface EventJSON {
   // notifications?: {};
 }
 
-export type EventsJSON = EventJSON[];
+export type NylasEventsJSON = NylasEventJSON[];
 
-export type Event = Pick<
-  EventJSON,
+export type NylasEvent = Pick<
+  NylasEventJSON,
   "id" | "title" | "description" | "location" | "object" | "status"
 > & {
   accountId: string;
@@ -202,4 +229,4 @@ export type Event = Pick<
   updatedAt?: number;
 };
 
-export type Events = Event[];
+export type NylasEvents = NylasEvent[];

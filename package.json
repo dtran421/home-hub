@@ -14,7 +14,10 @@
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^0.3.2",
-    "@mobiscroll/react": "https://npm.mobiscroll.com/@mobiscroll/react-trial/-/react-trial-5.27.0.tgz",
+    "@fullcalendar/core": "^6.1.9",
+    "@fullcalendar/daygrid": "^6.1.9",
+    "@fullcalendar/react": "^6.1.9",
+    "@fullcalendar/timegrid": "^6.1.9",
     "@planetscale/database": "^1.11.0",
     "@t3-oss/env-nextjs": "^0.6.0",
     "@tanstack/react-query": "^4.32.6",

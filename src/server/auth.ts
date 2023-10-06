@@ -8,6 +8,7 @@ import type { Adapter } from "next-auth/adapters";
 import GoogleProvider, { type GoogleProfile } from "next-auth/providers/google";
 import { eq } from "drizzle-orm";
 import { mysqlTable } from "drizzle-orm/mysql-core";
+import moment from "moment";
 
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 
@@ -15,7 +16,7 @@ import { env } from "@/env.mjs";
 import { db } from "@/server/db";
 import { type UserRole } from "@/types/User";
 
-import { users } from "./db/schema";
+import { accounts, users } from "./db/schema";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -48,6 +49,22 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
+    async signIn({ user, account }) {
+      if (!account?.access_token || !account?.expires_at) {
+        return true;
+      }
+
+      await db
+        .update(accounts)
+        .set({
+          access_token: account.access_token,
+          expires_at: account.expires_at,
+        })
+        .where(eq(accounts.userId, user.id));
+
+      return true;
+    },
+    /* @ts-expect-error: force return empty object if access token is expired */
     async session({ session, token }) {
       if (!session.user || !token) {
         return session;
@@ -61,9 +78,25 @@ export const authOptions: NextAuthOptions = {
           columns: {
             role: true,
           },
+          with: {
+            accounts: {
+              columns: {
+                expires_at: true,
+              },
+            },
+          },
         });
 
         session.user.role = user?.role ?? "user";
+
+        const expires_at = user?.accounts?.[0]?.expires_at;
+        session.expires = (
+          expires_at ? moment.unix(expires_at) : moment().add(1, "hours")
+        ).toISOString();
+      }
+
+      if (moment(session.expires).isSameOrBefore(moment())) {
+        return {};
       }
 
       return session;

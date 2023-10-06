@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
@@ -8,15 +8,23 @@ import { cn } from "utils-toolkit";
 import { ErrorAlert } from "@/components/Alerts/ErrorAlert";
 import { NavMenu } from "@/components/NavMenu";
 import { env } from "@/env.mjs";
+import { useGetGoogleCalendars, useUpdateGoogleCalendar } from "@/hooks/Google";
 import {
-  useGetCalendars,
   useGetEvents,
-  useUpdateCalendar,
+  useGetNylasCalendars,
+  useUpdateNylasCalendar,
   useUpsertNylasAccount,
 } from "@/hooks/Nylas";
 import { useGetUser } from "@/hooks/User";
 import { type User } from "@/server/db/schema";
-import { Calendar, type NylasAuthProvider } from "@/types/Nylas";
+import { type GoogleCalendar, type GoogleCalendars } from "@/types/Google";
+import {
+  getNylasAuthProvider,
+  type NylasAuthProvider,
+  type NylasAuthProviderString,
+  type NylasCalendar,
+  type NylasCalendars,
+} from "@/types/Nylas";
 import { NYLAS_BASE_URL } from "@/utils/common";
 
 const EventCalendar = dynamic(
@@ -26,11 +34,109 @@ const EventCalendar = dynamic(
   },
 );
 
+type CalendarType = "All" | "Tasks";
+
+type Calendars = (NylasCalendar | GoogleCalendar)[];
+
+type ProviderCalendarMap = Record<
+  (typeof NylasAuthProviderString)[number],
+  Calendars
+>;
+
+type TypeCalendarMap = Record<CalendarType, Partial<ProviderCalendarMap>>;
+
+const getCalendarType = (
+  calendar: NylasCalendar | GoogleCalendar,
+): CalendarType => {
+  if ("kind" in calendar) {
+    return "All";
+  }
+
+  return calendar.description === "Task Calendar" ? "Tasks" : "All";
+};
+
+const postProcessCalendars = (
+  nylasCalendars: NylasCalendars | null,
+  googleCalendars: GoogleCalendars | null,
+): Partial<TypeCalendarMap> | null => {
+  const typeCalendarMap: Partial<TypeCalendarMap> = {};
+
+  if (nylasCalendars?.length) {
+    nylasCalendars
+      .filter((calendar) => !calendar.name.includes("⚠️"))
+      .forEach((calendar) => {
+        const calendarType = getCalendarType(calendar);
+        const provider = getNylasAuthProvider(calendar.provider);
+
+        if (!typeCalendarMap[calendarType]) {
+          typeCalendarMap[calendarType] = {
+            [provider]: [],
+          };
+        }
+
+        if (!typeCalendarMap[calendarType]![provider]) {
+          typeCalendarMap[calendarType]![provider] = [];
+        }
+
+        typeCalendarMap[calendarType]![provider]!.push(calendar);
+      });
+  }
+
+  if (googleCalendars?.length) {
+    const calendarType = "All";
+    const provider = "Gmail";
+
+    if (!typeCalendarMap[calendarType]) {
+      typeCalendarMap[calendarType] = {
+        [provider]: [],
+      };
+    }
+
+    if (!typeCalendarMap[calendarType]![provider]) {
+      typeCalendarMap[calendarType]![provider] = [];
+    }
+
+    typeCalendarMap[calendarType]![provider]!.push(...googleCalendars);
+  }
+
+  if (!Object.keys(typeCalendarMap).length) {
+    return null;
+  }
+
+  Object.values(typeCalendarMap).forEach((providerMap) => {
+    Object.values(providerMap).forEach((calendars) => {
+      calendars.sort((a, b) => {
+        if (a.isPrimary && !b.isPrimary) {
+          return -1;
+        }
+
+        if (!a.isPrimary && b.isPrimary) {
+          return 1;
+        }
+
+        if (a.name < b.name) {
+          return -1;
+        }
+
+        if (a.name > b.name) {
+          return 1;
+        }
+
+        return 0;
+      });
+    });
+  });
+
+  return typeCalendarMap;
+};
+
 const userHasNylasAuth = (user: User | null) => user?.nylasAccounts?.length;
 
 const Calendar = () => {
   const router = useRouter();
-  const { data: session, status: sessionStatus } = useSession();
+  const { data: session, status: sessionStatus } = useSession({
+    required: true,
+  });
 
   const {
     user,
@@ -42,10 +148,20 @@ const Calendar = () => {
 
   const [customError, setCustomError] = useState("");
 
-  const { calendars, isLoading: isLoadingCalendars } = useGetCalendars();
-  const updateCalendar = useUpdateCalendar();
+  const { calendars: nylasCalendars, isLoading: isLoadingNylasCalendars } =
+    useGetNylasCalendars(user);
+  const updateNylasCalendar = useUpdateNylasCalendar();
 
-  const { events, isLoading: isLoadingEvents } = useGetEvents();
+  const { calendars: googleCalendars, isLoading: isLoadingGoogleCalendars } =
+    useGetGoogleCalendars(user);
+  const updateGoogleCalendar = useUpdateGoogleCalendar();
+
+  const calendars = useMemo(
+    () => postProcessCalendars(nylasCalendars, googleCalendars),
+    [googleCalendars, nylasCalendars],
+  );
+
+  const { events, isLoading: isLoadingEvents } = useGetEvents(user);
 
   const nylasAccountId = (router.query.account_id as string) ?? "";
   const nylasProvider =
@@ -101,8 +217,16 @@ const Calendar = () => {
     user,
   ]);
 
-  const toggleCalendarActive = (calendar: Calendar) => {
-    updateCalendar.mutate({
+  const toggleCalendarActive = (calendar: NylasCalendar | GoogleCalendar) => {
+    if ("kind" in calendar) {
+      void updateGoogleCalendar.mutate({
+        ...calendar,
+        active: !calendar.active,
+      });
+      return;
+    }
+
+    void updateNylasCalendar.mutate({
       ...calendar,
       active: !calendar.active,
     });
@@ -114,6 +238,7 @@ const Calendar = () => {
     sessionStatus === "loading" ||
     isLoadingUser ||
     upsertNylasAccount.isLoading ||
+    updateGoogleCalendar.isLoading ||
     isLoadingEvents;
 
   return (
@@ -124,44 +249,52 @@ const Calendar = () => {
           <span className="loading loading-spinner loading-md text-accent" />
         ) : null}
       </div>
-      <div className="flex h-full w-full items-center justify-center space-x-48 px-16 pb-20">
+      <div className="flex h-full w-full items-center justify-center space-x-36 px-16 pb-20">
         <div className="flex w-1/5 flex-col">
-          {isLoadingCalendars ? (
+          {isLoadingNylasCalendars || isLoadingGoogleCalendars ? (
             <span className="loading loading-spinner loading-md text-accent" />
           ) : null}
           {calendars ? (
             <div className="space-y-10">
-              {Object.entries(calendars).map(([calType, cals]) => (
-                <div key={calType}>
-                  <h2 className="base-content text-xl font-semibold">
-                    {calType}
+              {Object.entries(calendars).map(([type, calMap]) => (
+                <div key={type}>
+                  <h2 className="base-content mb-4 text-xl font-semibold">
+                    {type}
                   </h2>
-                  <div className="divider" />
-                  <ul className="space-y-2">
-                    {cals.map((cal) => (
-                      <li key={cal.id} className="form-control">
-                        <label
-                          className={cn(
-                            "label cursor-pointer gap-x-4",
-                            "justify-start",
-                          )}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={cal.active}
-                            onChange={() => toggleCalendarActive(cal)}
-                            className={cn("checkbox checkbox-sm", {
-                              "checkbox-primary": cal.active,
-                            })}
-                          />
-                          <h3
-                            className={cn("", {
-                              "text-gray-500": !cal.active,
-                            })}
-                          >
-                            {cal.name}
-                          </h3>
-                        </label>
+                  <ul className="menu rounded-box bg-base-200">
+                    {Object.entries(calMap).map(([provider, cals]) => (
+                      <li key={provider}>
+                        <span className="menu-dropdown-show menu-dropdown-toggle">
+                          {provider}
+                        </span>
+                        <ul className="menu-dropdown-show menu-dropdown">
+                          {cals.map((cal) => (
+                            <li key={cal.id} className="form-control">
+                              <label
+                                className={cn(
+                                  "label cursor-pointer gap-x-4",
+                                  "justify-start",
+                                )}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={cal.active}
+                                  onChange={() => toggleCalendarActive(cal)}
+                                  className={cn("checkbox checkbox-sm", {
+                                    "checkbox-primary": cal.active,
+                                  })}
+                                />
+                                <h3
+                                  className={cn("", {
+                                    "text-gray-500": !cal.active,
+                                  })}
+                                >
+                                  {cal.name}
+                                </h3>
+                              </label>
+                            </li>
+                          ))}
+                        </ul>
                       </li>
                     ))}
                   </ul>
@@ -170,7 +303,7 @@ const Calendar = () => {
             </div>
           ) : null}
         </div>
-        <div className="flex h-4/5 w-3/5 flex-col items-end gap-y-4 overflow-hidden rounded-lg">
+        <div className="flex h-4/5 w-3/5 flex-col items-end gap-y-4">
           <button
             className="btn btn-secondary"
             onClick={() => redirectToNylasAuth()}

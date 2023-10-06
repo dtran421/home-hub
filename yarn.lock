@@ -201,6 +201,30 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.49.0.tgz#86f79756004a97fa4df866835093f1df3d03c333"
   integrity sha512-1S8uAY/MTJqVx0SC4epBq+N2yhuwtNwLbJYNZyhL2pO1ZVKn5HFXav5T41Ryzy9K9V7ZId2JB2oy/W4aCd9/2w==
 
+"@fullcalendar/core@^6.1.9":
+  version "6.1.9"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/core/-/core-6.1.9.tgz#ea735b0dd0a0a487969ebbb6c99b0967e07568c0"
+  integrity sha512-eeG+z9BWerdsU9Ac6j16rpYpPnE0wxtnEHiHrh/u/ADbGTR3hCOjCD9PxQOfhOTHbWOVs7JQunGcksSPu5WZBQ==
+  dependencies:
+    preact "~10.12.1"
+
+"@fullcalendar/daygrid@^6.1.9", "@fullcalendar/daygrid@~6.1.9":
+  version "6.1.9"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/daygrid/-/daygrid-6.1.9.tgz#efb8aabb2f928ac0b05a77c5443accb546ae5818"
+  integrity sha512-o/6joH/7lmVHXAkbaa/tUbzWYnGp/LgfdiFyYPkqQbjKEeivNZWF1WhHqFbhx0zbFONSHtrvkjY2bjr+Ef2quQ==
+
+"@fullcalendar/react@^6.1.9":
+  version "6.1.9"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/react/-/react-6.1.9.tgz#280fd543901d792c19b50f363c55cc3068917299"
+  integrity sha512-ioxu0V++pYz2u/N1LL1V8DkMyiKGRun0gMAll2tQz3Kzi3r9pTwncGKRb1zO8h0e+TrInU08ywk/l5lBwp7eog==
+
+"@fullcalendar/timegrid@^6.1.9":
+  version "6.1.9"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/timegrid/-/timegrid-6.1.9.tgz#83b61ac734638d11182aeb579b638fa0bc52ea32"
+  integrity sha512-le7UV05wVE1Trdr054kgJXTwa+A1pEI8nlCBnPWdcyrL+dTLoPvQ4AWEVCnV7So+4zRYaCqnqGXfCJsj0RQa0g==
+  dependencies:
+    "@fullcalendar/daygrid" "~6.1.9"
+
 "@humanwhocodes/config-array@^0.11.11":
   version "0.11.11"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.11.11.tgz#88a04c570dbbc7dd943e4712429c3df09bc32844"
@@ -251,10 +275,6 @@
   dependencies:
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
-
-"@mobiscroll/react@https://npm.mobiscroll.com/@mobiscroll/react-trial/-/react-trial-5.27.0.tgz":
-  version "5.27.0"
-  resolved "https://npm.mobiscroll.com/@mobiscroll/react-trial/-/react-trial-5.27.0.tgz#dfe4eda07d0165731d3d6ab3e76a6fdbf14cf94c"
 
 "@next/env@13.5.2":
   version "13.5.2"
@@ -2742,6 +2762,11 @@ preact@^10.6.3:
   version "10.17.1"
   resolved "https://registry.yarnpkg.com/preact/-/preact-10.17.1.tgz#0a1b3c658c019e759326b9648c62912cf5c2dde1"
   integrity sha512-X9BODrvQ4Ekwv9GURm9AKAGaomqXmip7NQTZgY7gcNmr7XE83adOMJvd3N42id1tMFU7ojiynRsYnY6/BRFxLA==
+
+preact@~10.12.1:
+  version "10.12.1"
+  resolved "https://registry.yarnpkg.com/preact/-/preact-10.12.1.tgz#8f9cb5442f560e532729b7d23d42fd1161354a21"
+  integrity sha512-l8386ixSsBdbreOAkqtrwqHwdvR35ID8c3rKPa8lCWuO86dBi32QWHV4vfsZK1utLLFMvw+Z5Ad4XLkZzchscg==
 
 prelude-ls@^1.2.1:
   version "1.2.1"

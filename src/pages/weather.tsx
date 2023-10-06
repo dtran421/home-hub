@@ -19,7 +19,9 @@ import { use3DayForecast } from "@/hooks/Weather";
 import { WeatherForecast } from "@/types/Weather";
 
 const Weather = () => {
-  const { data: session, status: sessionStatus } = useSession();
+  const { data: session, status: sessionStatus } = useSession({
+    required: true,
+  });
 
   const {
     user,

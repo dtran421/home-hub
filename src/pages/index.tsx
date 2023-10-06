@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import { type Session } from "next-auth";
 import { signIn, useSession } from "next-auth/react";
+import moment from "moment";
 import { FcGoogle } from "react-icons/fc";
 import { FiEdit2, FiRefreshCw } from "react-icons/fi";
 
@@ -63,9 +64,12 @@ const MainPage = ({ refreshBg, isRefreshingBg }: MainPageProps) => {
     setName(user?.name ?? "");
   }, [user?.name]);
 
-  const [time, setTime] = useState(new Date());
+  const [time, setTime] = useState(moment().format("h:mm A"));
   useEffect(() => {
-    const interval = setInterval(() => setTime(new Date()), 1000);
+    const interval = setInterval(
+      () => setTime(moment().format("h:mm A")),
+      1000,
+    );
     return () => clearInterval(interval);
   }, []);
 
@@ -139,10 +143,7 @@ const MainPage = ({ refreshBg, isRefreshingBg }: MainPageProps) => {
           )}
           {!loadingUser && user?.name ? (
             <h2 className="text-center font-mono text-6xl font-bold text-white">
-              {time.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              {time}
             </h2>
           ) : null}
         </div>
