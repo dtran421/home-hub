@@ -45,6 +45,10 @@ type ProviderCalendarMap = Record<
 
 type TypeCalendarMap = Record<CalendarType, Partial<ProviderCalendarMap>>;
 
+type CalendarProviderKey =
+  `${CalendarType}-${(typeof NylasAuthProviderString)[number]}`;
+type ExpandedCalendarsMap = Partial<Record<CalendarProviderKey, boolean>>;
+
 const getCalendarType = (
   calendar: NylasCalendar | GoogleCalendar,
 ): CalendarType => {
@@ -54,6 +58,14 @@ const getCalendarType = (
 
   return calendar.description === "Task Calendar" ? "Tasks" : "All";
 };
+
+const getCalendarProviderKey = (
+  type: string,
+  provider: string,
+): CalendarProviderKey =>
+  `${type as CalendarType}-${
+    provider as (typeof NylasAuthProviderString)[number]
+  }`;
 
 const postProcessCalendars = (
   nylasCalendars: NylasCalendars | null,
@@ -132,7 +144,7 @@ const postProcessCalendars = (
 
 const userHasNylasAuth = (user: User | null) => user?.nylasAccounts?.length;
 
-const Calendar = () => {
+const CalendarPage = () => {
   const router = useRouter();
   const { data: session, status: sessionStatus } = useSession({
     required: true,
@@ -160,6 +172,25 @@ const Calendar = () => {
     () => postProcessCalendars(nylasCalendars, googleCalendars),
     [googleCalendars, nylasCalendars],
   );
+
+  const [expandedCalendars, setExpandedCalendars] =
+    useState<ExpandedCalendarsMap>({});
+  useEffect(() => {
+    if (!calendars) {
+      return;
+    }
+
+    const newExpandedCalendars: ExpandedCalendarsMap = {};
+
+    Object.entries(calendars).forEach(([type, calMap]) => {
+      Object.keys(calMap).forEach((provider) => {
+        const key = getCalendarProviderKey(type, provider);
+        newExpandedCalendars[key] = true;
+      });
+    });
+
+    setExpandedCalendars(newExpandedCalendars);
+  }, [calendars]);
 
   const { events, isLoading: isLoadingEvents } = useGetEvents(user);
 
@@ -232,8 +263,6 @@ const Calendar = () => {
     });
   };
 
-  console.log("calendars", calendars);
-
   const loading =
     sessionStatus === "loading" ||
     isLoadingUser ||
@@ -264,10 +293,31 @@ const Calendar = () => {
                   <ul className="menu rounded-box bg-base-200">
                     {Object.entries(calMap).map(([provider, cals]) => (
                       <li key={provider}>
-                        <span className="menu-dropdown-show menu-dropdown-toggle">
+                        <span
+                          className={cn("menu-dropdown-toggle", {
+                            "menu-dropdown-show":
+                              expandedCalendars[
+                                getCalendarProviderKey(type, provider)
+                              ],
+                          })}
+                          onClick={() =>
+                            setExpandedCalendars((prev) => ({
+                              ...prev,
+                              [getCalendarProviderKey(type, provider)]:
+                                !prev[getCalendarProviderKey(type, provider)],
+                            }))
+                          }
+                        >
                           {provider}
                         </span>
-                        <ul className="menu-dropdown-show menu-dropdown">
+                        <ul
+                          className={cn("menu-dropdown", {
+                            "menu-dropdown-show":
+                              expandedCalendars[
+                                getCalendarProviderKey(type, provider)
+                              ],
+                          })}
+                        >
                           {cals.map((cal) => (
                             <li key={cal.id} className="form-control">
                               <label
@@ -326,4 +376,4 @@ const Calendar = () => {
   );
 };
 
-export default Calendar;
+export default CalendarPage;

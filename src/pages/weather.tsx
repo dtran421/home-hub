@@ -18,7 +18,7 @@ import { useGetUser, useUpdateUser } from "@/hooks/User";
 import { use3DayForecast } from "@/hooks/Weather";
 import { WeatherForecast } from "@/types/Weather";
 
-const Weather = () => {
+const WeatherPage = () => {
   const { data: session, status: sessionStatus } = useSession({
     required: true,
   });
@@ -218,4 +218,4 @@ const WeatherDay = ({ dailyForecast }: WeatherDayProps) => {
   );
 };
 
-export default Weather;
+export default WeatherPage;

@@ -42,7 +42,7 @@ export const NavMenu = () => {
   const activePage = router.pathname.slice(1) || "";
 
   return (
-    <div className="absolute bottom-4 z-50 flex gap-x-2">
+    <div className="absolute bottom-4 left-1/2 z-50 flex -translate-x-1/3 gap-x-2">
       <ul className="menu rounded-box menu-horizontal bg-base-200">
         {LINKS.map((link) => (
           <li

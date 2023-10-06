@@ -15,7 +15,19 @@ So all in all, we're going with a good ol' website instead.
 
 ## Development
 
-To run on a Raspberry Pi, first set the `$DISPLAY` global env variable in your main shell config file (`.zshrc`, `.bashrc`, `.profile`, etc.) via:
+To run the development server, run the following command:
+
+```zsh
+yarn dev
+```
+
+To run the development server on a Raspberry Pi, run the following command:
+
+```zsh
+yarn dev:pi
+```
+
+The above will handle running the server automatically. However, if you want to run the command manually, first set the `$DISPLAY` global env variable in your main shell config file (`.zshrc`, `.bashrc`, `.profile`, etc.) via:
 
 ```bash
 export DISPLAY=:0
