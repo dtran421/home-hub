@@ -13,9 +13,7 @@ Electron also didn't work because:
 
 So all in all, we're going with a good ol' website instead.
 
-## Development
-
-### Stack
+## Stack
 
 - [React](https://reactjs.org/)
 - [Next.js](https://nextjs.org/)
@@ -28,11 +26,25 @@ So all in all, we're going with a good ol' website instead.
 - [Drizzle](https://drizzle.studio/)
 - [Vercel](https://vercel.com/)
 
+## Development
+
+### Prerequisites
+
+To set up the project, first run the following command to install the dependencies:
+
+```zsh
+yarn install --frozen-lockfile
+```
+
+Then, request the `.env` file from me and place it in the root of the project.
+
 To run the development server, run the following command:
 
 ```zsh
 yarn dev
 ```
+
+### Running on a Raspberry Pi
 
 To run the development server on a Raspberry Pi, run the following command:
 
