@@ -8,6 +8,14 @@ import { api } from "@/utils/api";
 import { generateQueryKey, getError } from "@/utils/query";
 
 export const useGetUser = (session: Session | null) => {
+  const queryClient = useQueryClient();
+
+  if (!session?.user?.id) {
+    queryClient.removeQueries(
+      generateQueryKey(api.users.get as unknown as TRPCRouterLike),
+    );
+  }
+
   const {
     data,
     isFetched,

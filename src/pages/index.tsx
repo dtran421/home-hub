@@ -9,10 +9,10 @@ import { FiEdit2, FiRefreshCw } from "react-icons/fi";
 
 import { ErrorAlert } from "@/components/Alerts/ErrorAlert";
 import { WarningAlert } from "@/components/Alerts/WarningAlert";
-import { NavMenu } from "@/components/NavMenu";
 import { useGetUnsplashImage } from "@/hooks/Unsplash";
 import { useGetUser, useUpdateUser } from "@/hooks/User";
 import { type User } from "@/server/db/schema";
+import { type getError } from "@/utils/query";
 
 const getHeaderText = (
   session: Session | null,
@@ -37,20 +37,19 @@ const getHeaderText = (
 interface MainPageProps {
   refreshBg: () => void;
   isRefreshingBg: boolean;
+  error: ReturnType<typeof getError> | null;
 }
 
-const MainPage = ({ refreshBg, isRefreshingBg }: MainPageProps) => {
+const MainPage = ({ refreshBg, isRefreshingBg, error }: MainPageProps) => {
   const router = useRouter();
-  const { data: session, status: sessionStatus } = useSession({
-    required: false,
-  });
+  const { data: session, status: sessionStatus } = useSession();
 
   const {
     user,
     isFetched: isUserFetched,
     isLoading: isLoadingUser,
     isError,
-    error,
+    error: userQueryError,
   } = useGetUser(session);
   const updateUser = useUpdateUser();
 
@@ -97,7 +96,7 @@ const MainPage = ({ refreshBg, isRefreshingBg }: MainPageProps) => {
   const headerText = getHeaderText(session, user, loadingUser);
 
   return (
-    <>
+    <div className="flex h-full w-full items-center justify-center">
       <div className="indicator">
         {!!user?.name && (
           <button
@@ -163,8 +162,9 @@ const MainPage = ({ refreshBg, isRefreshingBg }: MainPageProps) => {
           <FiRefreshCw size={20} />
         </button>
       </div>
-      <NavMenu />
-      {isError && <ErrorAlert message={error?.message} />}
+      {(isError || error) && (
+        <ErrorAlert message={error?.message ?? userQueryError?.message} />
+      )}
       {customError && (
         <WarningAlert
           message={customError}
@@ -173,25 +173,26 @@ const MainPage = ({ refreshBg, isRefreshingBg }: MainPageProps) => {
           }}
         />
       )}
-    </>
+    </div>
   );
 };
 
 const Home = () => {
-  const { img, isFetching, isError, error, refresh } = useGetUnsplashImage();
+  const { img, isFetching, error, refresh } = useGetUnsplashImage();
 
   return (
-    <main className="flex h-screen w-full flex-col items-center justify-center bg-base-100 p-4">
-      {img && (
-        <figure className="fixed h-full w-full">
-          <Image alt="unsplash bg image" src={img.urls.full} fill priority />
-        </figure>
-      )}
-      <div className="z-10">
-        <MainPage refreshBg={refresh} isRefreshingBg={isFetching} />
-        {isError && <ErrorAlert message={error?.message} />}
+    <div className="fixed h-full w-full">
+      {img ? (
+        <Image alt="unsplash bg image" src={img.urls.full} fill priority />
+      ) : null}
+      <div className="z-10 h-full">
+        <MainPage
+          refreshBg={refresh}
+          isRefreshingBg={isFetching}
+          error={error}
+        />
       </div>
-    </main>
+    </div>
   );
 };
 

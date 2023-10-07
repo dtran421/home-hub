@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import { FiPlusSquare } from "react-icons/fi";
 import { cn } from "utils-toolkit";
 
 import { ErrorAlert } from "@/components/Alerts/ErrorAlert";
-import { NavMenu } from "@/components/NavMenu";
+import { Calendar } from "@/components/Calendar";
 import { env } from "@/env.mjs";
 import { useGetGoogleCalendars, useUpdateGoogleCalendar } from "@/hooks/Google";
 import {
@@ -26,13 +25,6 @@ import {
   type NylasCalendars,
 } from "@/types/Nylas";
 import { NYLAS_BASE_URL } from "@/utils/common";
-
-const EventCalendar = dynamic(
-  () => import("../components/Calendar").then((mod) => mod.Calendar),
-  {
-    ssr: false,
-  },
-);
 
 type CalendarType = "All" | "Tasks";
 
@@ -271,14 +263,14 @@ const CalendarPage = () => {
     isLoadingEvents;
 
   return (
-    <div className="flex h-screen w-full flex-col items-center">
+    <>
       <div className="flex w-full items-center justify-start gap-x-4 px-14 py-8">
         <h1 className="text-4xl font-bold text-gray-200">Calendar</h1>
         {loading ? (
           <span className="loading loading-spinner loading-md text-accent" />
         ) : null}
       </div>
-      <div className="flex h-full w-full items-center justify-center space-x-36 px-16 pb-20">
+      <div className="flex h-full w-full justify-center space-x-36 px-16 pt-14">
         <div className="flex w-1/5 flex-col">
           {isLoadingNylasCalendars || isLoadingGoogleCalendars ? (
             <span className="loading loading-spinner loading-md text-accent" />
@@ -361,10 +353,9 @@ const CalendarPage = () => {
             <FiPlusSquare size={20} />
             Link Calendar
           </button>
-          <EventCalendar events={events} setError={setCustomError} />
+          <Calendar events={events} setError={setCustomError} />
         </div>
       </div>
-      <NavMenu />
       {isError ||
         (upsertNylasAccount.isError && (
           <ErrorAlert
@@ -372,7 +363,7 @@ const CalendarPage = () => {
           />
         ))}
       {customError && <ErrorAlert message={customError} />}
-    </div>
+    </>
   );
 };
 

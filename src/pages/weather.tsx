@@ -10,10 +10,10 @@ import {
   FiTrendingDown,
   FiTrendingUp,
 } from "react-icons/fi";
+import { cn } from "utils-toolkit";
 
 import { ErrorAlert } from "@/components/Alerts/ErrorAlert";
 import { WarningAlert } from "@/components/Alerts/WarningAlert";
-import { NavMenu } from "@/components/NavMenu";
 import { useGetUser, useUpdateUser } from "@/hooks/User";
 import { use3DayForecast } from "@/hooks/Weather";
 import { WeatherForecast } from "@/types/Weather";
@@ -61,43 +61,47 @@ const WeatherPage = () => {
     sessionStatus === "loading" || isLoadingUser || updateUser.isLoading;
 
   return (
-    <div className="flex h-screen w-full flex-col items-center bg-cover bg-center p-4">
-      <form onSubmit={submitHandler}>
-        <input
-          type="text"
-          placeholder="New York, NY"
-          value={newCity}
-          onChange={(e) => setNewCity(e.target.value)}
-          className={`input input-bordered ${
-            !user?.city ? "input-primary" : ""
-          } input-md w-full max-w-xs text-center text-primary`}
-        />
-        {loadingUser || isLoadingUser ? (
-          <div className="mt-6">
-            <span className="loading loading-spinner loading-md text-accent" />
-          </div>
-        ) : null}
-        {!loadingUser && !user?.city ? (
-          <div className="mt-6 flex flex-col items-center gap-y-2">
-            <FiArrowUp size={20} />
-            <p className="text-neutral-content">Enter a city to get started</p>
-          </div>
-        ) : null}
-      </form>
-      {isLoadingForecast ? (
-        <span className="loading loading-spinner loading-md text-accent" />
+    <>
+      {loadingUser ? (
+        <div className="mt-6 flex justify-center">
+          <span className="loading loading-spinner loading-lg text-accent" />
+        </div>
       ) : (
         <>
-          <WeatherHeader location={forecast?.location} />
-          <WeatherForecast forecasts={forecast?.forecasts} />
+          <form onSubmit={submitHandler}>
+            <input
+              type="text"
+              placeholder="New York, NY"
+              value={newCity}
+              onChange={(e) => setNewCity(e.target.value)}
+              className={cn(
+                "input input-bordered input-md w-full max-w-xs text-center text-primary",
+                {
+                  "input-primary": !user?.city,
+                },
+              )}
+            />
+          </form>
+          {!user?.city ? (
+            <div className="mt-6 flex flex-col items-center gap-y-2">
+              <FiArrowUp size={20} />
+              <p className="text-neutral-content">
+                Enter a city to get started
+              </p>
+            </div>
+          ) : null}
         </>
       )}
-      <NavMenu />
+      <WeatherHeader location={forecast?.location} />
+      <WeatherForecast
+        forecasts={forecast?.forecasts}
+        loading={isLoadingForecast}
+      />
       {!isError && warning && (
         <WarningAlert message={warning} onClose={() => setWarning("")} />
       )}
       {isError && <ErrorAlert message={error?.message} />}
-    </div>
+    </>
   );
 };
 
@@ -130,16 +134,20 @@ const WeatherHeader = ({ location }: WeatherHeaderProps) => {
 
 interface WeatherForecastProps {
   forecasts: WeatherForecast["forecasts"] | undefined;
+  loading: boolean;
 }
 
-const WeatherForecast = ({ forecasts }: WeatherForecastProps) => {
-  if (!forecasts) {
+const WeatherForecast = ({ forecasts, loading }: WeatherForecastProps) => {
+  if (!loading && !forecasts) {
     return null;
   }
 
   return (
     <div className="mb-40 mt-10 flex w-full flex-1 flex-row items-center justify-center">
-      {forecasts.map((day) => (
+      {loading ? (
+        <span className="loading-xl loading loading-spinner text-accent" />
+      ) : null}
+      {forecasts?.map((day) => (
         <WeatherDay key={day.date} dailyForecast={day} />
       ))}
     </div>

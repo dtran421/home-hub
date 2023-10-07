@@ -5,8 +5,6 @@ import { useSession } from "next-auth/react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { cn } from "utils-toolkit";
 
-import { NavMenu } from "@/components/NavMenu";
-
 const WifiPage = () => {
   const router = useRouter();
   const { data: session, status: sessionStatus } = useSession({
@@ -52,61 +50,60 @@ const WifiPage = () => {
 
   return (
     <>
-      <div className="flex h-screen w-full flex-col items-center">
-        <div className="flex w-full items-center justify-start gap-x-4 px-14 py-8">
-          <h1 className="text-4xl font-bold text-gray-200">Wi-Fi</h1>
-          {loading ? (
-            <span className="loading loading-spinner loading-md text-accent" />
-          ) : null}
-        </div>
-        <div className="mt-32 flex h-full flex-col gap-y-4">
-          <Image
-            alt="wifi qr code"
-            src="/qr-code.png"
-            width={512}
-            height={512}
-          />
-          <div className="divider"></div>
-          <div
-            className={cn(
-              "stats stats-vertical shadow lg:stats-horizontal",
-              "bg-neutral",
-            )}
-          >
-            <div className="stat">
-              <div className="stat-title">Network</div>
-              <div className={cn("stat-value", "text-xl")}>
-                INTERNET JUICE GUEST
-              </div>
+      <div className="flex w-full items-center justify-start gap-x-4 px-14 py-8">
+        <h1 className="text-4xl font-bold text-gray-200">Wi-Fi</h1>
+        {loading ? (
+          <span className="loading loading-spinner loading-md text-accent" />
+        ) : null}
+      </div>
+      <div className="mt-6 flex h-full flex-col gap-y-4">
+        <Image
+          alt="wifi qr code"
+          src="/qr-code.png"
+          width={512}
+          height={512}
+          className="h-auto w-auto"
+          priority
+        />
+        <div className="divider"></div>
+        <div
+          className={cn(
+            "stats stats-vertical shadow lg:stats-horizontal",
+            "bg-neutral",
+          )}
+        >
+          <div className="stat">
+            <div className="stat-title">Network</div>
+            <div className={cn("stat-value", "text-xl")}>
+              INTERNET JUICE GUEST
             </div>
-            <div className="stat">
-              <div className="stat-title">Password</div>
-              <div
-                className={cn(
-                  "stat-value flex justify-between space-x-2",
-                  "text-xl",
-                )}
-              >
-                <span>{showPassword ? "sky34lguest" : "·".repeat(10)}</span>
-                <button className="btn btn-circle btn-info btn-xs">
-                  <EyeIcon
-                    size={14}
-                    onClick={() =>
-                      setShowPassword((prevShowPassword) => {
-                        if (prevShowPassword) {
-                          resetPasswordTimeout();
-                        }
-                        return !prevShowPassword;
-                      })
-                    }
-                  />
-                </button>
-              </div>
+          </div>
+          <div className="stat">
+            <div className="stat-title">Password</div>
+            <div
+              className={cn(
+                "stat-value flex justify-between space-x-2",
+                "text-xl",
+              )}
+            >
+              <span>{showPassword ? "sky34lguest" : "·".repeat(10)}</span>
+              <button className="btn btn-circle btn-info btn-xs">
+                <EyeIcon
+                  size={14}
+                  onClick={() =>
+                    setShowPassword((prevShowPassword) => {
+                      if (prevShowPassword) {
+                        resetPasswordTimeout();
+                      }
+                      return !prevShowPassword;
+                    })
+                  }
+                />
+              </button>
             </div>
           </div>
         </div>
       </div>
-      <NavMenu />
     </>
   );
 };

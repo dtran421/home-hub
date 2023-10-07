@@ -48,7 +48,7 @@ export const NavMenu = () => {
           <li
             key={link.href}
             className={cn("", {
-              "active text-accent": activePage === link.href.slice(1),
+              "text-accent": activePage === link.href.slice(1),
             })}
           >
             <Link href={link.href}>{link.icon}</Link>
