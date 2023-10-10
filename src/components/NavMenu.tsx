@@ -45,13 +45,17 @@ export const NavMenu = () => {
     <div className="absolute bottom-4 left-1/2 z-50 flex -translate-x-1/2 gap-x-2">
       <ul className="menu rounded-box menu-horizontal bg-base-200">
         {LINKS.map((link) => (
-          <li
-            key={link.href}
-            className={cn("", {
-              "text-accent": activePage === link.href.slice(1),
-            })}
-          >
-            <Link href={link.href}>{link.icon}</Link>
+          <li key={link.href} className={cn("bg-transparent")}>
+            <div>
+              <Link
+                href={link.href}
+                className={cn({
+                  "text-accent": activePage === link.href.slice(1),
+                })}
+              >
+                {link.icon}
+              </Link>
+            </div>
           </li>
         ))}
       </ul>
