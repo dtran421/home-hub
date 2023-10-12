@@ -1,6 +1,6 @@
 {
-  "name": "home-hub-v2",
-  "version": "0.1.0",
+  "name": "home-hub",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "build": "next build",

@@ -1,6 +1,10 @@
-# Home Hub v2
+# Home Hub
 
-So unfortunately, Go + Wails did not work because:
+A modern digital hub for the home, with maximum simplicity for your ease of use and comfort.
+
+## Background
+
+Initially, I tried creating this project using a Golang + Wails stack. Unfortunately, this approach did not work for my use case because:
 
 1. Wails doesn't support cross-compilation yet, so I can't build from Mac to Linux
 2. Wails can't run on the Raspberry Pi for some reason (issues with gcc toolchain)
@@ -11,7 +15,7 @@ Electron also didn't work because:
 2. Electron itself can't even run on the Pi because of a missing `.so` file??
 3. Also tried building on Mac to run on Linux, this also doesn't work (I don't remember why though)
 
-So all in all, we're going with a good ol' website instead.
+So all in all, I decided to switch to a web application, circumventing any cross-platform-compiling issues.
 
 ## Stack
 
