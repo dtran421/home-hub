@@ -46,7 +46,7 @@ export const NavMenu = () => {
       <ul className="menu rounded-box menu-horizontal bg-base-200">
         {LINKS.map((link) => (
           <li key={link.href} className="bg-transparent">
-            <div>
+            <span>
               <Link
                 href={link.href}
                 className={cn({
@@ -55,7 +55,7 @@ export const NavMenu = () => {
               >
                 {link.icon}
               </Link>
-            </div>
+            </span>
           </li>
         ))}
       </ul>
